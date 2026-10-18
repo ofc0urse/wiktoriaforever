@@ -165,6 +165,10 @@
     position: relative; flex: none; width: 96px; height: 96px; padding: 0; border: 0; background: none; cursor: pointer;
     -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
+  /* Przytrzymanie kota nie może zaznaczać tekstu obok ani otwierać menu. */
+  .kot, .kot *, .tytul-rzad, .liczniki, .klodka, .czekanie .uwaga {
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
   .kot svg { width: 100%; height: 100%; overflow: visible; }
   .kot .ogon { transform-origin: 86px 98px; animation: ogon 2.4s ease-in-out infinite; }
   @keyframes ogon { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(14deg); } }
@@ -880,6 +884,8 @@ $app.addEventListener('submit', async (ev) => {
     st.zajete = null; st.komunikat[nr] = { zle: true, tekst: BLAD_SIECI }; widokGry();
   }
 });
+
+$app.addEventListener('contextmenu', (ev) => { if (ev.target.closest('[data-kot], [data-klodka]')) ev.preventDefault(); });
 
 $app.addEventListener('input', (ev) => {
   const m = ev.target.id && ev.target.id.match(/^odp(\d+)$/);
