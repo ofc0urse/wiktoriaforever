@@ -284,7 +284,10 @@ async function firebaseApi() {
       if (!s.exists()) throw new Error('brak-gry');
       ustawienia = s.data();
       const [y, m, d] = String(ustawienia.start).split('-').map(Number);
-      return { otwarcie: (dz) => S.warszawaNaUtc(y, m, d + dz - 1, Number(ustawienia.godzina) || 0) };
+      return {
+        otwarcie: (dz) => S.warszawaNaUtc(y, m, d + dz - 1, Number(ustawienia.godzina) || 0),
+        liczbaLiter: Number(ustawienia.liczbaLiter) || 7
+      };
     },
     async zagadki() {
       const lista = [];
@@ -415,11 +418,14 @@ function widokGry() {
   const zaDni = {};
   st.zagadki.forEach((z) => { (zaDni[S.dzienPaczki(z.nr)] ||= []).push(z); });
 
-  // litery z dni 1–7
+  // litery do finału, w kolejności paczek
+  const zebrane = Object.keys(st.nagrody).map(Number).sort((a, b) => a - b)
+    .map((nr) => (st.nagrody[nr] || {}).litera).filter(Boolean);
+  const ileLiter = Math.max(st.liczbaLiter || 7, zebrane.length);
   const litery = [];
-  for (let d = 1; d <= 7; d++) {
-    const l = (zaDni[d] || []).map((z) => (st.nagrody[z.nr] || {}).litera).find(Boolean) || '';
-    litery.push(`<span class="litera${l ? ' jest' : ''}" aria-label="Dzień ${d}: ${l || 'jeszcze brak'}">${esc(l)}</span>`);
+  for (let i = 0; i < ileLiter; i++) {
+    const l = zebrane[i] || '';
+    litery.push(`<span class="litera${l ? ' jest' : ''}" aria-label="Litera ${i + 1}: ${l || 'jeszcze brak'}">${esc(l)}</span>`);
   }
 
   const teraz = Date.now();
@@ -457,7 +463,7 @@ function widokGry() {
         <div class="licznik"><span>Podpowiedzi</span>${kropki(st.postep.podpowiedzi.length)}</div>
         <div class="licznik"><span>Pominięcia</span>${kropki(st.postep.pominiete.length)}</div>
       </div>
-      <div class="litery"><span class="etykieta">Litery do finału</span><div class="litery-rzad">${litery.join('')}</div></div>
+      <div class="litery"><span class="etykieta">Litery do finału</span><div class="litery-rzad" style="grid-template-columns: repeat(${ileLiter}, minmax(0, 1fr))">${litery.join('')}</div></div>
       ${nastepna ? `<p class="nastepna" id="nastepna">Następne zagadki: <b>${fmtDzien(nastepna.t)} o ${fmtGodz(nastepna.t)}</b> (${zaIle(nastepna.t)})</p>` : ''}
     </header>
     <div class="dni">${dni}</div>
@@ -469,7 +475,7 @@ function widokGry() {
 async function wczytaj() {
   const h = await api.harmonogram();
   const [z, p] = await Promise.all([api.zagadki(), api.postep()]);
-  st.otwarcie = h.otwarcie; st.zagadki = z; st.postep = p;
+  st.otwarcie = h.otwarcie; st.liczbaLiter = h.liczbaLiter; st.zagadki = z; st.postep = p;
   const zrob = [...p.rozwiazane, ...p.pominiete].filter((nr) => !st.nagrody[nr]);
   await Promise.all(zrob.map(async (nr) => { st.nagrody[nr] = await api.nagroda(nr); }));
   const otwarteNr = z.filter((x) => !x.zablokowana).map((x) => x.nr);

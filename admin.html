@@ -247,7 +247,8 @@ $('wgraj').onclick = async () => {
     const [y, m, dd] = d.start.split('-').map(Number);
     const sol = Array.from(crypto.getRandomValues(new Uint8Array(12))).map((x) => x.toString(16).padStart(2, '0')).join('');
     const b = F.writeBatch(db);
-    b.set(F.doc(db, 'ustawienia', 'gra'), { start: d.start, godzina: godz, sol });
+    const liczbaLiter = d.zagadki.filter((z) => z.litera).length;
+    b.set(F.doc(db, 'ustawienia', 'gra'), { start: d.start, godzina: godz, sol, liczbaLiter });
     for (const z of d.zagadki) {
       const nr = Number(z.nr), id = nrId(nr);
       const hashe = [];
