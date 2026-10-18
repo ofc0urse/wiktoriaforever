@@ -50,7 +50,7 @@ Bez ustawionego Firebase strona działa w **trybie demo** (z tym samym hasłem c
 ## Jak to działa
 
 - Start: „Hejj, aby przejść dalej, wpisz hasło” → skan twarzy (przednia kamera, odliczanie 3-2-1, zdjęcie) → odliczanie do pierwszej łamigłówki albo 3-2-1 i gra.
-- Zdjęcie ze skanu widzi tylko ona, na swoim telefonie. Nigdzie nie jest wysyłane ani zapisywane. Gdy kamera nie działa, może zrobić zdjęcie aparatem albo przejść bez skanu.
+- Na ekranie skanu jest napisane, że zdjęcie zostanie zachowane, i jest przycisk „Wolę bez zdjęcia”. Zapisane zdjęcia oglądasz w `admin.html` → **Zdjęcia ze skanu twarzy**. Gdy kamera nie działa, może zrobić zdjęcie aparatem albo przejść bez skanu.
 
 - Zagadki otwiera **serwer** o ustalonej godzinie (`"godzina": 6` → 6:00 czasu polskiego). Zmiana daty w telefonie nic nie da.
 - Odpowiedzi są zapisane w bazie tylko jako skróty SHA-256. Wielkość liter, spacje i polskie znaki nie mają znaczenia (`grudziadz` = `Grudziądz`).

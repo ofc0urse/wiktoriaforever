@@ -250,6 +250,7 @@ function demoApi() {
       return z(nr).podp;
     },
     async nagroda(nr) { const x = z(nr); return { wiadomosc: x.wiadomosc || '', litera: x.litera || '' }; },
+    async zapiszZdjecie() { /* demo: nigdzie nie wysyłamy */ },
     otworzWszystko() { pam.wszystko = true; zapisz(); },
     wyczysc() { pam = { zalogowany: true, wszystko: pam.wszystko, rozwiazane: [], podpowiedzi: [], pominiete: [] }; zapisz(); }
   };
@@ -276,6 +277,7 @@ async function firebaseApi() {
     },
     // Firebase wymaga min. 6 znaków, więc do wpisanego hasła doklejamy stałą końcówkę.
     async zaloguj(haslo) { await A.signInWithEmailAndPassword(auth, CFG.graczEmail, hasloFirebase(haslo)); },
+    async zapiszZdjecie(obraz) { await F.addDoc(F.collection(db, 'zdjecia'), { obraz, kiedy: F.serverTimestamp() }); },
     async wyloguj() { await A.signOut(auth); },
     async harmonogram() {
       const s = await F.getDoc(F.doc(db, 'ustawienia', 'gra'));
@@ -495,8 +497,10 @@ async function poSkanie(obraz) {
   const ramka = document.getElementById('ramka');
   if (obraz && ramka) ramka.innerHTML = `<img src="${obraz}" alt="Twoje zdjęcie">`;
   document.getElementById('skan-tytul').textContent = obraz ? 'Twarz rozpoznana' : 'Dobra, wierzę ci';
-  document.getElementById('skan-opis').textContent = obraz ? 'To na pewno Ty :)' : 'Wpuszczam bez skanu.';
+  document.getElementById('skan-opis').textContent = obraz ? 'To na pewno Ty :) Zdjęcie zapisane.' : 'Wpuszczam bez skanu.';
   document.getElementById('skan-akcje').innerHTML = '';
+  document.querySelectorAll('.skan .uwaga').forEach((el) => el.remove());
+  if (obraz) { try { await api.zapiszZdjecie(obraz); } catch (e) { console.warn(e); } }
   await czekaj(2200);
   await startGry(true, true);
 }
@@ -512,11 +516,14 @@ async function widokSkanu() {
         <span class="licz" id="licz" aria-live="assertive"></span>
       </div>
       <p class="usmiech">Uśmiechnij się :)</p>
+      <p class="uwaga">Zrobię ci zdjęcie i zachowam je sobie na pamiątkę.</p>
       <div class="skan-akcje" id="skan-akcje">
         <button class="przycisk" type="button" id="skanuj" disabled>Skanuj</button>
+        <button class="tekstowy" type="button" id="bez-zdjecia">Wolę bez zdjęcia</button>
       </div>
     </main>`;
   const wideo = document.getElementById('wideo');
+  document.getElementById('bez-zdjecia').onclick = () => poSkanie(null);
   try {
     strumien = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } }, audio: false });
     wideo.srcObject = strumien;

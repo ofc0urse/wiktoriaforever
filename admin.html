@@ -35,6 +35,9 @@
   th, td { border-bottom: 1px solid #D9D2CC; padding: 6px 8px; text-align: left; vertical-align: top; }
   th { font-weight: 800; }
   ul { margin: 0; padding-left: 20px; }
+  .zdjecia { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .zdjecia figure { margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+  .zdjecia img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; border: 2px solid var(--tusz); }
   :focus-visible { outline: 3px solid var(--zielen); outline-offset: 2px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>
@@ -83,6 +86,12 @@
       <label class="wiersz" style="font-weight:600"><input type="checkbox" id="mimo"> wgraj mimo braków (do testów)</label>
     </div>
     <div id="raport"></div>
+  </section>
+
+  <section class="blok" aria-labelledby="h-zdj">
+    <h2 id="h-zdj">Zdjęcia ze skanu twarzy</h2>
+    <div class="wiersz"><button class="przycisk drugi" type="button" id="zdj-pokaz" disabled>Pokaż zdjęcia</button></div>
+    <div id="zdjecia" class="zdjecia"></div>
   </section>
 
   <section class="blok" aria-labelledby="h-postep">
@@ -211,7 +220,22 @@ function odswiezPrzyciski() {
   $('wgraj').disabled = !(admin && gra && (!gra.braki.length || $('mimo').checked));
   $('postep-odswiez').disabled = !admin;
   $('postep-czysc').disabled = !admin;
+  $('zdj-pokaz').disabled = !admin;
 }
+
+/* ---------- Zdjęcia ---------- */
+$('zdj-pokaz').onclick = async () => {
+  try {
+    const s = await F.getDocs(F.query(F.collection(db, 'zdjecia'), F.orderBy('kiedy', 'desc')));
+    if (s.empty) { $('zdjecia').innerHTML = '<p class="info">Jeszcze nie ma zdjęć.</p>'; return; }
+    $('zdjecia').innerHTML = s.docs.map((d, i) => {
+      const z = d.data();
+      if (typeof z.obraz !== 'string' || !z.obraz.startsWith('data:image/jpeg;base64,')) return '';
+      const kiedy = z.kiedy ? fmt(z.kiedy.toMillis()) : '';
+      return `<figure><img src="${z.obraz}" alt="Zdjęcie ${i + 1}"><figcaption>${esc(kiedy)} · <a href="${z.obraz}" download="skan-${i + 1}.jpg">Pobierz</a></figcaption></figure>`;
+    }).join('');
+  } catch (e) { $('zdjecia').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}</p>`; }
+};
 
 /* ---------- Wgrywanie ---------- */
 $('wgraj').onclick = async () => {

@@ -48,6 +48,17 @@ service cloud.firestore {
       allow write: if admin();
     }
 
+    // Zdjęcie ze skanu (ona widzi na ekranie, że jest zapisywane, i może pominąć).
+    // Gracz może tylko dodać, oglądać i usuwać może tylko admin.
+    match /zdjecia/{id} {
+      allow create: if gracz()
+        && request.resource.data.keys().hasOnly(['obraz', 'kiedy'])
+        && request.resource.data.obraz is string
+        && request.resource.data.obraz.size() < 900000
+        && request.resource.data.kiedy == request.time;
+      allow read, delete: if admin();
+    }
+
     match /postep/{uid} {
       allow read: if admin() || (gracz() && request.auth.uid == uid);
       allow create: if gracz() && request.auth.uid == uid && poprawnyPostep(request.resource.data);
