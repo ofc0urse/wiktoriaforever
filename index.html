@@ -330,8 +330,11 @@ const JAJKA = {
   TACOHEMIGWAY: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
   TACO: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
   CHCEMYTEGOWIECEJ: { tekst: 'To nie ten utwór, ale lubisz go bardzo.' },
-  TONASZAPIOSENKA: { tekst: 'Niestety też nie, ale to mój ulubiony, haha.' }
+  TONASZAPIOSENKA: { tekst: 'Niestety też nie, ale to mój ulubiony, haha.' },
+  US: { tekst: 'Pamiętam, jak się uśmiechnąłem ze szczęścia.', serca: true }
 };
+const RICK_URL = 'https://www.youtube.com/watch?v=QDia3e12czc';
+const RICKROLL = ['RICKROLL', 'RICKROLLED', 'RICKROL', 'RIKROL', 'RIKROLL', 'RICK', 'RICKASTLEY', 'NEVERGONNAGIVEYOUUP', 'RICKROLLING'];
 
 // Deszcz dowolnego obrazka albo tekstu (ciasta, cyfry).
 function deszcz(html, ile, klasa = '') {
@@ -360,7 +363,7 @@ function sprawdzUrodziny() {
     urodzinyAktywne = true;
     pasekUrodzin = document.createElement('div');
     pasekUrodzin.className = 'pasek-urodzin'; pasekUrodzin.setAttribute('role', 'status');
-    pasekUrodzin.textContent = '19:10. Tak, to o tej godzinie się urodziłem ;)';
+    pasekUrodzin.textContent = '19:10. Tak, to o tej godzinie się urodziłem ;) 15 października 2009.';
     document.body.append(pasekUrodzin);
   }
   if (teraz) deszcz(CIASTO, 6, 'ciasto');
@@ -839,6 +842,13 @@ $app.addEventListener('submit', async (ev) => {
   const odp = pole.value;
   st.wpisane[nr] = odp;
   if (!S.normalizuj(odp)) { st.komunikat[nr] = { zle: true, tekst: 'Najpierw coś wpisz.' }; widokGry(); return; }
+  // Rickroll: otwieramy od razu (jeszcze w kliknięciu), żeby telefon nie zablokował nowej karty.
+  if (RICKROLL.includes(S.normalizuj(odp))) {
+    const okno = window.open(RICK_URL, '_blank', 'noopener');
+    st.komunikat[nr] = { jajko: true, tekst: okno ? 'Never gonna give you up :)' : 'Never gonna give you up :) (telefon zablokował nową kartę)' };
+    widokGry();
+    return;
+  }
   st.zajete = nr; st.komunikat[nr] = null; widokGry();
   try {
     const z = st.zagadki.find((x) => x.nr === nr);
