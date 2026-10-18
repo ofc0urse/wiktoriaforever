@@ -352,22 +352,28 @@ function deszczLiczb() { deszcz('6', 10, 'cyfra-deszcz'); deszcz('7', 10, 'cyfra
 
 const CIASTO = '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="19" y="3" width="2.4" height="8" rx="1" fill="#E8B4B8"/><path d="M20.2 0.5c1.6 1.6 1.6 3.2 0 4-1.6-.8-1.6-2.4 0-4z" fill="#F2B544"/><rect x="7" y="11" width="26" height="10" rx="3" fill="#F6D8DC" stroke="#B8324F" stroke-width="1.2"/><rect x="4" y="20" width="32" height="14" rx="3" fill="#E8B4B8" stroke="#B8324F" stroke-width="1.2"/><path d="M4 25q4 3 8 0t8 0 8 0 8 0" fill="none" stroke="#FFFDF8" stroke-width="2"/><rect x="2" y="33" width="36" height="4" rx="2" fill="#D9D2CC"/></svg>';
 
-// 19:10 czasu polskiego: wtedy się urodziłem. Przez całą minutę spadają ciasta.
-let urodzinyAktywne = false, pasekUrodzin = null;
+// Godziny-niespodzianki (czas polski), codziennie. Przez całą tę minutę spadają torty.
+const GODZINY_TORTOW = {
+  '19:10': '19:10. Tak, to o tej godzinie się urodziłem ;) 15 października 2009.',
+  '10:15': '10:15, czyli 15.10. Moje urodziny ;)',
+  '03:26': '03:26, czyli 26.03. Twoje urodziny :)'
+};
+let aktywnaGodzina = null, pasekUrodzin = null;
 function godzinaWarszawa() {
   return new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date());
 }
 function sprawdzUrodziny() {
-  const teraz = godzinaWarszawa() === '19:10';
-  if (teraz && !urodzinyAktywne) {
-    urodzinyAktywne = true;
+  const g = godzinaWarszawa();
+  const tekst = GODZINY_TORTOW[g];
+  if (aktywnaGodzina && aktywnaGodzina !== g) { aktywnaGodzina = null; pasekUrodzin?.remove(); pasekUrodzin = null; }
+  if (tekst && !aktywnaGodzina) {
+    aktywnaGodzina = g;
     pasekUrodzin = document.createElement('div');
     pasekUrodzin.className = 'pasek-urodzin'; pasekUrodzin.setAttribute('role', 'status');
-    pasekUrodzin.textContent = '19:10. Tak, to o tej godzinie się urodziłem ;) 15 października 2009.';
+    pasekUrodzin.textContent = tekst;
     document.body.append(pasekUrodzin);
   }
-  if (teraz) deszcz(CIASTO, 6, 'ciasto');
-  if (!teraz && urodzinyAktywne) { urodzinyAktywne = false; pasekUrodzin?.remove(); pasekUrodzin = null; }
+  if (tekst) deszcz(CIASTO, 6, 'ciasto');
 }
 setInterval(sprawdzUrodziny, 2500);
 setTimeout(sprawdzUrodziny, 500);
