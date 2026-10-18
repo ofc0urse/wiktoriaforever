@@ -1,0 +1,62 @@
+rules_version = '2';
+
+// Reguły gry „Może ci się przydać”.
+// Wklej całość w Firebase → Firestore Database → Rules → Publish.
+// Adresy e-mail muszą być takie same jak w config.js.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function admin() {
+      return request.auth != null && request.auth.token.email == 'admin@example.com';
+    }
+    function gracz() {
+      return request.auth != null && request.auth.token.email == 'gracz@example.com';
+    }
+    function postep() {
+      return get(/databases/$(database)/documents/postep/$(request.auth.uid)).data;
+    }
+    // Zagadka jest otwarta, gdy minęła jej godzina otwarcia (liczy serwer, nie telefon).
+    function otwarta(nr) {
+      return request.time >= get(/databases/$(database)/documents/zagadki/$(nr)).data.odblokowanie;
+    }
+    function poprawnyPostep(d) {
+      return d.keys().hasOnly(['rozwiazane', 'podpowiedzi', 'pominiete'])
+        && d.rozwiazane is list && d.podpowiedzi is list && d.pominiete is list
+        && d.rozwiazane.size() <= 15
+        && d.podpowiedzi.size() <= 3
+        && d.pominiete.size() <= 3;
+    }
+
+    match /ustawienia/{id} {
+      allow read: if gracz() || admin();
+      allow write: if admin();
+    }
+
+    match /zagadki/{nr} {
+      allow read: if admin() || (gracz() && request.time >= resource.data.odblokowanie);
+      allow write: if admin();
+    }
+
+    match /podpowiedzi/{nr} {
+      allow read: if admin() || (gracz() && nr in postep().podpowiedzi && otwarta(nr));
+      allow write: if admin();
+    }
+
+    match /nagrody/{nr} {
+      allow read: if admin()
+        || (gracz() && (nr in postep().rozwiazane || nr in postep().pominiete) && otwarta(nr));
+      allow write: if admin();
+    }
+
+    match /postep/{uid} {
+      allow read: if admin() || (gracz() && request.auth.uid == uid);
+      allow create: if gracz() && request.auth.uid == uid && poprawnyPostep(request.resource.data);
+      // Można tylko dopisywać: zużytej podpowiedzi czy pominięcia nie da się „oddać”.
+      allow update: if gracz() && request.auth.uid == uid && poprawnyPostep(request.resource.data)
+        && request.resource.data.rozwiazane.hasAll(resource.data.rozwiazane)
+        && request.resource.data.podpowiedzi.hasAll(resource.data.podpowiedzi)
+        && request.resource.data.pominiete.hasAll(resource.data.pominiete);
+      allow delete: if admin();
+    }
+  }
+}

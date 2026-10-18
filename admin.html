@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel gry</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=JetBrains+Mono:wght@700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+  :root { --papier: #FFFDF8; --tusz: #2A2422; --szary: #5C5350; --zielen: #2F6B3A; --zielen-ciemna: #22512B; --zielen-tlo: #E9F2EB; --blad: #A3322B; --zolty: #FFF4D6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--papier); color: var(--tusz); font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif; font-size: 16px; line-height: 1.45; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .strona { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; display: flex; flex-direction: column; gap: 22px; }
+  h1 { font-family: 'Caveat', cursive; font-size: 48px; line-height: 1; margin: 0; }
+  h2 { font-family: 'Caveat', cursive; font-size: 32px; line-height: 1; margin: 0; }
+  p { margin: 0; }
+  .blok { border: 2px solid var(--tusz); border-radius: 16px; padding: 16px; background: #fff; display: flex; flex-direction: column; gap: 12px; }
+  .wiersz { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  label { font-weight: 800; font-size: 14px; }
+  .pole { min-height: 44px; padding: 8px 12px; border: 2px solid var(--tusz); border-radius: 10px; background: #fff; }
+  textarea.pole { width: 100%; min-height: 90px; resize: vertical; }
+  #json { min-height: 220px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .przycisk { min-height: 44px; padding: 0 16px; border: 2px solid var(--zielen-ciemna); border-radius: 10px; background: var(--zielen); color: #fff; font-weight: 800; cursor: pointer; }
+  .przycisk.drugi { background: #fff; color: var(--zielen-ciemna); }
+  .przycisk.grozny { background: var(--blad); border-color: var(--blad); }
+  .przycisk[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .wynik { font-family: 'JetBrains Mono', monospace; font-size: 18px; padding: 12px; border-radius: 10px; background: var(--papier); border: 1.5px solid #D9D2CC; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 48px; }
+  .info { color: var(--szary); font-size: 14px; }
+  .ok { color: var(--zielen); font-weight: 800; }
+  .zle { color: var(--blad); font-weight: 800; }
+  .uwaga { background: var(--zolty); border: 1.5px solid #E2C46B; border-radius: 10px; padding: 10px 12px; font-weight: 600; }
+  .tabela { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border-bottom: 1px solid #D9D2CC; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { font-weight: 800; }
+  ul { margin: 0; padding-left: 20px; }
+  :focus-visible { outline: 3px solid var(--zielen); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main class="strona">
+  <header>
+    <h1>Panel gry</h1>
+    <p class="info">Tylko dla Ciebie. Tu szyfrujesz zagadki, wgrywasz grę i podglądasz postęp.</p>
+  </header>
+
+  <section class="blok" aria-labelledby="h-szyfr">
+    <h2 id="h-szyfr">Szyfrownik</h2>
+    <p class="info">Wpisz tekst, wybierz szyfr i skopiuj wynik do pola <b>kod</b> w pliku zagadki.json. Szyfry są te same co na karcie.</p>
+    <label for="sz-tekst">Tekst</label>
+    <textarea class="pole" id="sz-tekst" placeholder="np. GDZIE SIĘ POZNALIŚMY"></textarea>
+    <div class="wiersz">
+      <label for="sz-rodzaj" class="sr">Szyfr</label>
+      <select class="pole" id="sz-rodzaj"></select>
+      <span id="sz-liczba-box" class="wiersz" hidden><label for="sz-liczba">o ile pól</label><input class="pole" id="sz-liczba" type="number" value="1" style="width:80px"></span>
+      <button class="przycisk" type="button" id="sz-koduj">Zaszyfruj</button>
+      <button class="przycisk drugi" type="button" id="sz-dekoduj">Odszyfruj</button>
+      <button class="przycisk drugi" type="button" id="sz-kopiuj">Kopiuj wynik</button>
+    </div>
+    <div class="wynik" id="sz-wynik" aria-live="polite"></div>
+    <p class="info">Przy przesunięciu „Zaszyfruj o 15” znaczy, że ona musi cofnąć każdą literę o 15. Zawsze sprawdź wynik przyciskiem Odszyfruj.</p>
+  </section>
+
+  <section class="blok" aria-labelledby="h-log" id="logowanie-blok">
+    <h2 id="h-log">Logowanie admina</h2>
+    <div id="log-tresc"></div>
+  </section>
+
+  <section class="blok" aria-labelledby="h-wgraj">
+    <h2 id="h-wgraj">Wgraj grę</h2>
+    <p class="info">Wczytaj swój plik zagadki.json. <b>Nie wrzucaj go na GitHuba</b>: są w nim odpowiedzi. Do Firebase trafiają tylko zaszyfrowane skróty odpowiedzi.</p>
+    <div class="wiersz">
+      <label for="plik">Plik</label>
+      <input class="pole" type="file" id="plik" accept=".json,application/json">
+    </div>
+    <label for="json">albo wklej zawartość</label>
+    <textarea class="pole" id="json" spellcheck="false"></textarea>
+    <div class="wiersz">
+      <button class="przycisk drugi" type="button" id="sprawdz">Sprawdź plik</button>
+      <button class="przycisk" type="button" id="wgraj" disabled>Wgraj do Firebase</button>
+      <label class="wiersz" style="font-weight:600"><input type="checkbox" id="mimo"> wgraj mimo braków (do testów)</label>
+    </div>
+    <div id="raport"></div>
+  </section>
+
+  <section class="blok" aria-labelledby="h-postep">
+    <h2 id="h-postep">Postęp gracza</h2>
+    <div class="wiersz">
+      <button class="przycisk drugi" type="button" id="postep-odswiez" disabled>Pokaż postęp</button>
+      <button class="przycisk grozny" type="button" id="postep-czysc" disabled>Wyczyść postęp (po testach)</button>
+    </div>
+    <div id="postep"></div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="szyfry.js"></script>
+<script type="module">
+const S = window.Szyfry;
+const CFG = window.ZOSTAW_CONFIG || {};
+const MA_FIREBASE = !!(CFG.firebase && CFG.firebase.apiKey);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const nrId = (nr) => String(nr).padStart(2, '0');
+async function sha256(t) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+  return Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+const fmt = (ms) => new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', weekday: 'short', day: 'numeric', month: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(ms));
+
+/* ---------- Szyfrownik ---------- */
+const sel = $('sz-rodzaj');
+Object.entries(S.SZYFRY).forEach(([k, v]) => { const o = document.createElement('option'); o.value = k; o.textContent = v.nazwa; sel.append(o); });
+const pokazLiczbe = () => { $('sz-liczba-box').hidden = !S.SZYFRY[sel.value].liczba; };
+sel.addEventListener('change', pokazLiczbe); pokazLiczbe();
+const szyfr = (co) => { const s = S.SZYFRY[sel.value]; $('sz-wynik').textContent = s[co]($('sz-tekst').value, Number($('sz-liczba').value)); };
+$('sz-koduj').onclick = () => szyfr('koduj');
+$('sz-dekoduj').onclick = () => szyfr('dekoduj');
+$('sz-kopiuj').onclick = async () => {
+  try { await navigator.clipboard.writeText($('sz-wynik').textContent); $('sz-kopiuj').textContent = 'Skopiowano'; }
+  catch (e) { $('sz-kopiuj').textContent = 'Zaznacz i skopiuj ręcznie'; }
+  setTimeout(() => { $('sz-kopiuj').textContent = 'Kopiuj wynik'; }, 1500);
+};
+
+/* ---------- Firebase ---------- */
+let F, A, auth, db;
+async function initFirebase() {
+  const B = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const [{ initializeApp }, a, f] = await Promise.all([import(B + 'firebase-app.js'), import(B + 'firebase-auth.js'), import(B + 'firebase-firestore.js')]);
+  A = a; F = f;
+  const app = initializeApp(CFG.firebase);
+  auth = A.getAuth(app); db = F.getFirestore(app);
+  await auth.authStateReady();
+}
+const jestAdminem = () => !!(auth && auth.currentUser && auth.currentUser.email === CFG.adminEmail);
+
+function widokLogowania(blad = '') {
+  const box = $('log-tresc');
+  if (!MA_FIREBASE) {
+    box.innerHTML = '<p class="uwaga">Firebase nie jest jeszcze ustawiony (pusty apiKey w config.js). Szyfrownik i sprawdzanie pliku działają, wgrywanie nie.</p>';
+    return;
+  }
+  if (jestAdminem()) {
+    box.innerHTML = `<div class="wiersz"><span class="ok">Zalogowano jako ${esc(auth.currentUser.email)}</span><button class="przycisk drugi" type="button" id="wyloguj">Wyloguj</button></div>`;
+    $('wyloguj').onclick = async () => { await A.signOut(auth); odswiezPrzyciski(); widokLogowania(); };
+  } else {
+    box.innerHTML = `<form class="wiersz" id="log-form">
+      <label for="log-email">E-mail</label><input class="pole" id="log-email" type="email" value="${esc(CFG.adminEmail)}" autocomplete="username">
+      <label for="log-haslo">Hasło</label><input class="pole" id="log-haslo" type="password" autocomplete="current-password">
+      <button class="przycisk" type="submit">Zaloguj</button></form>
+      <p class="zle" role="alert">${esc(blad)}</p>`;
+    $('log-form').onsubmit = async (ev) => {
+      ev.preventDefault();
+      try {
+        await A.signInWithEmailAndPassword(auth, $('log-email').value.trim(), $('log-haslo').value);
+        if (!jestAdminem()) { await A.signOut(auth); widokLogowania('To nie jest konto admina z config.js.'); return; }
+        widokLogowania(); odswiezPrzyciski();
+      } catch (e) { widokLogowania('Nie udało się zalogować: ' + (e.code || e.message)); }
+    };
+  }
+}
+
+/* ---------- Sprawdzanie pliku ---------- */
+let gra = null;
+$('plik').onchange = async () => { const f = $('plik').files[0]; if (f) { $('json').value = await f.text(); sprawdzPlik(); } };
+$('sprawdz').onclick = sprawdzPlik;
+$('mimo').onchange = odswiezPrzyciski;
+
+function sprawdzPlik() {
+  gra = null;
+  const bledy = [], braki = [];
+  let d;
+  try { d = JSON.parse($('json').value); } catch (e) { $('raport').innerHTML = `<p class="zle">To nie jest poprawny JSON: ${esc(e.message)}</p>`; odswiezPrzyciski(); return; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.start || '')) bledy.push('Pole "start" musi wyglądać tak: "2026-11-01".');
+  const godz = Number(d.godzina);
+  if (!Number.isInteger(godz) || godz < 0 || godz > 23) bledy.push('Pole "godzina" musi być liczbą od 0 do 23.');
+  const lista = Array.isArray(d.zagadki) ? d.zagadki : [];
+  const numery = lista.map((z) => Number(z.nr)).sort((a, b) => a - b);
+  for (let i = 1; i <= 15; i++) if (!numery.includes(i)) bledy.push(`Brakuje zagadki nr ${i}.`);
+  if (lista.length !== 15) bledy.push(`Zagadek ma być 15, a jest ${lista.length}.`);
+  lista.forEach((z) => {
+    if (!Array.isArray(z.odpowiedzi) || !z.odpowiedzi.some((o) => S.normalizuj(o))) bledy.push(`Zagadka ${z.nr}: brak odpowiedzi.`);
+    const tekst = JSON.stringify(z);
+    if (tekst.includes('[UZUPEŁNIJ')) braki.push(`Zagadka ${z.nr}: zostało [UZUPEŁNIJ].`);
+  });
+  for (let dz = 1; dz <= 7; dz++) {
+    if (!lista.some((z) => S.dzienPaczki(Number(z.nr)) === dz && z.litera)) braki.push(`Dzień ${dz} nie daje żadnej litery do finału.`);
+  }
+
+  let tabela = '';
+  if (!bledy.length) {
+    const [y, m, dd] = d.start.split('-').map(Number);
+    const wiersze = [...lista].sort((a, b) => a.nr - b.nr).map((z) => {
+      const dz = S.dzienPaczki(Number(z.nr));
+      return `<tr><td>${z.nr}</td><td>${dz}</td><td>${esc(fmt(S.warszawaNaUtc(y, m, dd + dz - 1, godz)))}</td><td>${esc(z.typ || '')}</td><td>${esc(z.tytul || '')}</td><td>${esc((z.odpowiedzi || []).join(', '))}</td><td>${esc(z.litera || '')}</td></tr>`;
+    }).join('');
+    tabela = `<div class="tabela"><table><thead><tr><th>Nr</th><th>Dzień</th><th>Otwiera się</th><th>Typ</th><th>Tytuł</th><th>Odpowiedzi</th><th>Litera</th></tr></thead><tbody>${wiersze}</tbody></table></div>`;
+    gra = { d, braki };
+  }
+  $('raport').innerHTML = `
+    ${bledy.length ? `<div class="uwaga"><p class="zle">Błędy (popraw przed wgraniem):</p><ul>${bledy.map((b) => `<li>${esc(b)}</li>`).join('')}</ul></div>` : '<p class="ok">Plik jest poprawny.</p>'}
+    ${braki.length ? `<div class="uwaga"><p>Do uzupełnienia przed prawdziwą grą:</p><ul>${braki.map((b) => `<li>${esc(b)}</li>`).join('')}</ul></div>` : ''}
+    ${tabela}`;
+  odswiezPrzyciski();
+}
+
+function odswiezPrzyciski() {
+  const admin = jestAdminem();
+  $('wgraj').disabled = !(admin && gra && (!gra.braki.length || $('mimo').checked));
+  $('postep-odswiez').disabled = !admin;
+  $('postep-czysc').disabled = !admin;
+}
+
+/* ---------- Wgrywanie ---------- */
+$('wgraj').onclick = async () => {
+  if (!gra) return;
+  const btn = $('wgraj'); btn.disabled = true; btn.textContent = 'Wgrywam…';
+  try {
+    const d = gra.d;
+    const godz = Number(d.godzina);
+    const [y, m, dd] = d.start.split('-').map(Number);
+    const sol = Array.from(crypto.getRandomValues(new Uint8Array(12))).map((x) => x.toString(16).padStart(2, '0')).join('');
+    const b = F.writeBatch(db);
+    b.set(F.doc(db, 'ustawienia', 'gra'), { start: d.start, godzina: godz, sol });
+    for (const z of d.zagadki) {
+      const nr = Number(z.nr), id = nrId(nr);
+      const hashe = [];
+      for (const o of z.odpowiedzi) { const n = S.normalizuj(o); if (n) hashe.push(await sha256(`${sol}|${id}|${n}`)); }
+      const otw = S.warszawaNaUtc(y, m, dd + S.dzienPaczki(nr) - 1, godz);
+      b.set(F.doc(db, 'zagadki', id), {
+        nr, typ: z.typ || '', tytul: z.tytul || '', tresc: z.tresc || '', kod: z.kod || '',
+        hashe: [...new Set(hashe)], odblokowanie: F.Timestamp.fromMillis(otw)
+      });
+      b.set(F.doc(db, 'podpowiedzi', id), { tekst: z.podpowiedz || 'Tym razem bez podpowiedzi. Spróbuj od innej strony.' });
+      b.set(F.doc(db, 'nagrody', id), { wiadomosc: z.wiadomosc || '', litera: z.litera || '' });
+    }
+    await b.commit();
+    $('raport').insertAdjacentHTML('afterbegin', `<p class="ok">Wgrane. Pierwsze zagadki otworzą się: ${esc(fmt(S.warszawaNaUtc(y, m, dd, godz)))}.</p>`);
+  } catch (e) {
+    console.error(e);
+    $('raport').insertAdjacentHTML('afterbegin', `<p class="zle">Nie udało się wgrać: ${esc(e.code || e.message)}. Sprawdź reguły Firestore i e-mail admina.</p>`);
+  }
+  btn.textContent = 'Wgraj do Firebase'; odswiezPrzyciski();
+};
+
+/* ---------- Postęp ---------- */
+$('postep-odswiez').onclick = async () => {
+  try {
+    const s = await F.getDocs(F.collection(db, 'postep'));
+    if (s.empty) { $('postep').innerHTML = '<p class="info">Jeszcze nikt nie grał.</p>'; return; }
+    const lista = (x) => (x && x.length ? [...x].sort().map(Number).join(', ') : 'brak');
+    $('postep').innerHTML = s.docs.map((doc) => {
+      const p = doc.data();
+      return `<div class="uwaga" style="background:var(--zielen-tlo);border-color:var(--zielen)">
+        <p><b>Rozwiązane:</b> ${esc(lista(p.rozwiazane))}</p>
+        <p><b>Podpowiedzi:</b> ${esc(lista(p.podpowiedzi))}</p>
+        <p><b>Pominięte:</b> ${esc(lista(p.pominiete))}</p></div>`;
+    }).join('');
+  } catch (e) { $('postep').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}</p>`; }
+};
+let potwierdz = false;
+$('postep-czysc').onclick = async () => {
+  if (!potwierdz) { potwierdz = true; $('postep-czysc').textContent = 'Na pewno? Kliknij jeszcze raz'; return; }
+  potwierdz = false; $('postep-czysc').textContent = 'Wyczyść postęp (po testach)';
+  try {
+    const s = await F.getDocs(F.collection(db, 'postep'));
+    await Promise.all(s.docs.map((doc) => F.deleteDoc(doc.ref)));
+    $('postep').innerHTML = '<p class="ok">Postęp wyczyszczony. Gracz zaczyna od zera (na telefonie odśwież stronę).</p>';
+  } catch (e) { $('postep').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}</p>`; }
+};
+
+/* ---------- start ---------- */
+(async () => {
+  if (MA_FIREBASE) {
+    try { await initFirebase(); } catch (e) { $('log-tresc').innerHTML = '<p class="zle">Nie udało się połączyć z Firebase. Sprawdź config.js.</p>'; return; }
+  }
+  widokLogowania(); odswiezPrzyciski();
+})();
+</script>
+</body>
+</html>

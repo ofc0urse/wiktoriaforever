@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFDF8">
+<meta name="robots" content="noindex, nofollow">
+<title>Może ci się przydać</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=JetBrains+Mono:wght@700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+  :root {
+    --papier: #FFFDF8;
+    --tusz: #2A2422;
+    --szary: #5C5350;
+    --zielen: #2F6B3A;
+    --zielen-ciemna: #22512B;
+    --zielen-tlo: #E9F2EB;
+    --blad: #A3322B;
+    --odr: 'Caveat', 'Comic Sans MS', cursive;
+    --tekst: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--papier); color: var(--tusz);
+    font-family: var(--tekst); font-size: 17px; line-height: 1.45;
+  }
+  button, input { font: inherit; color: inherit; }
+  .strona { max-width: 560px; margin: 0 auto; padding: 28px 16px calc(40px + env(safe-area-inset-bottom)); }
+  .mala { font-family: var(--odr); font-size: 24px; font-weight: 700; color: var(--zielen); margin: 0; line-height: 1; }
+  h1 { font-family: var(--odr); font-size: 52px; line-height: 0.95; font-weight: 700; margin: 4px 0 0; text-wrap: balance; }
+  h2 { font-family: var(--odr); font-size: 34px; line-height: 1; font-weight: 700; margin: 0; }
+  h3 { font-size: 19px; font-weight: 800; margin: 0; line-height: 1.25; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* Logowanie */
+  .logowanie { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+  .logowanie p { margin: 0; }
+  .wiersz { display: flex; gap: 8px; }
+  .pole {
+    flex: 1 1 auto; min-width: 0; height: 52px; padding: 0 14px; border: 2px solid var(--tusz); border-radius: 12px;
+    background: #fff; font-size: 18px; font-weight: 700; letter-spacing: 0.04em;
+  }
+  .pole:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--zielen); outline-offset: 2px; }
+  .przycisk {
+    flex: none; height: 52px; padding: 0 20px; border: 2px solid var(--zielen-ciemna); border-radius: 12px;
+    background: var(--zielen); color: #fff; font-weight: 800; cursor: pointer;
+  }
+  .przycisk:hover { background: var(--zielen-ciemna); }
+  .przycisk[disabled], .tekstowy[disabled] { opacity: 0.55; cursor: progress; }
+  .tekstowy {
+    min-height: 44px; padding: 0 4px; border: 0; background: none; font-weight: 800; cursor: pointer;
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
+  }
+  .komunikat { margin: 0; min-height: 1.45em; font-weight: 700; }
+  .komunikat.zle { color: var(--blad); }
+  .uwaga { font-size: 15px; color: var(--szary); }
+
+  /* Nagłówek gry */
+  .naglowek { display: flex; flex-direction: column; gap: 18px; margin-bottom: 26px; }
+  .liczniki { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .licznik { border: 2px solid var(--tusz); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .licznik span:first-child { font-family: var(--odr); font-size: 24px; font-weight: 700; line-height: 1; }
+  .kropki { display: flex; gap: 6px; align-items: center; }
+  .kropka { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--tusz); }
+  .kropka.uzyta { background: var(--tusz); }
+  .kropki small { margin-left: 4px; font-size: 14px; color: var(--szary); font-weight: 600; }
+  .litery { display: flex; flex-direction: column; gap: 6px; }
+  .litery-rzad { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .litera {
+    height: 46px; border: 2px dotted var(--zielen); border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 800; color: var(--zielen);
+  }
+  .litera.jest { border-style: solid; background: var(--zielen-tlo); }
+  .etykieta { font-size: 14px; font-weight: 800; color: var(--szary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .nastepna { margin: 0; font-size: 15px; color: var(--szary); font-weight: 600; }
+  .nastepna b { color: var(--tusz); }
+
+  /* Dni i karty */
+  .dni { display: flex; flex-direction: column; gap: 28px; }
+  .dzien { display: flex; flex-direction: column; gap: 12px; }
+  .dzien-tytul { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .dzien-tytul .data { font-weight: 800; color: var(--szary); }
+  .zamkniety {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px dashed #8A807C; border-radius: 14px; color: var(--szary);
+  }
+  .zamkniety svg { flex: none; }
+  .zamkniety b { color: var(--tusz); }
+  .karta { border: 2px solid var(--tusz); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #fff; }
+  .karta-gora { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .paczka { font-family: var(--odr); font-size: 26px; font-weight: 700; line-height: 1; }
+  .typ { font-size: 13px; font-weight: 800; padding: 3px 10px; border: 2px solid var(--zielen); color: var(--zielen); border-radius: 999px; white-space: nowrap; }
+  .tresc { margin: 0; white-space: pre-line; text-wrap: pretty; }
+  .kod {
+    padding: 14px; border-radius: 12px; background: var(--papier); border: 1.5px solid #D9D2CC;
+    font-family: var(--mono); font-size: 20px; line-height: 1.6; letter-spacing: 0.04em; word-spacing: 0.1em;
+    overflow-wrap: anywhere; white-space: pre-wrap;
+  }
+  .podp { margin: 0; padding: 10px 12px; border-radius: 12px; background: #FFF4D6; border: 1.5px solid #E2C46B; }
+  .podp b { display: block; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .akcje { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .pytanie { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--papier); border: 1.5px solid #D9D2CC; }
+  .pytanie p { margin: 0; flex: 1 1 200px; font-weight: 700; }
+  .pytanie .przycisk { height: 44px; }
+  .trzes { animation: trzes 0.4s; }
+  @keyframes trzes { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+  @media (prefers-reduced-motion: reduce) { .trzes { animation: none; } }
+
+  .karta.zrobiona { background: var(--zielen-tlo); border-color: var(--zielen); }
+  .znacznik { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; color: var(--zielen); }
+  .otworz { margin: 0; font-family: var(--odr); font-size: 36px; line-height: 1; font-weight: 700; color: var(--zielen-ciemna); }
+  .wiadomosc { margin: 0; white-space: pre-line; text-wrap: pretty; }
+  .dostales { margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .dostales .litera { width: 46px; flex: none; }
+  details summary { cursor: pointer; font-weight: 800; color: var(--szary); min-height: 32px; display: flex; align-items: center; }
+  details[open] summary { margin-bottom: 8px; }
+  details .kod { margin-top: 8px; font-size: 16px; }
+  .final { border-width: 3px; }
+  .final .otworz { font-size: 44px; }
+
+  .stopka { margin-top: 40px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--szary); font-size: 14px; }
+  .demo-pasek {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    padding: 10px 12px; margin-bottom: 20px; border-radius: 12px; background: #FFF4D6; border: 1.5px solid #E2C46B; font-size: 14px; font-weight: 700;
+  }
+  .demo-pasek .tekstowy { min-height: 32px; font-size: 14px; }
+  .ladowanie { min-height: 70vh; display: flex; align-items: center; justify-content: center; font-family: var(--odr); font-size: 32px; color: var(--szary); }
+  .blad-ogolny { padding: 12px 14px; border-radius: 12px; border: 2px solid var(--blad); color: var(--blad); font-weight: 700; margin-bottom: 18px; }
+</style>
+</head>
+<body>
+<div id="app" class="strona"><div class="ladowanie">Chwileczkę…</div></div>
+
+<script src="config.js"></script>
+<script src="szyfry.js"></script>
+<script type="module">
+const S = window.Szyfry;
+const CFG = window.ZOSTAW_CONFIG || {};
+const DEMO = !(CFG.firebase && CFG.firebase.apiKey);
+const LICZBA = 15, LIMIT = 3;
+const $app = document.getElementById('app');
+
+/* ---------- pomocnicze ---------- */
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const nrId = (nr) => String(nr).padStart(2, '0');
+const fmtDzien = (ms) => {
+  const p = {};
+  new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', weekday: 'short', day: 'numeric', month: 'numeric' })
+    .formatToParts(new Date(ms)).forEach((x) => { p[x.type] = x.value; });
+  return `${p.weekday} ${p.day}.${p.month}`;
+};
+const fmtGodz = (ms) => new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', hour: 'numeric', minute: '2-digit' }).format(new Date(ms));
+const zaIle = (ms) => {
+  const min = Math.max(1, Math.ceil((ms - Date.now()) / 60000));
+  if (min < 60) return `za ${min} min`;
+  const h = Math.floor(min / 60), m = min % 60;
+  if (h < 24) return `za ${h} h${m ? ` ${m} min` : ''}`;
+  const d = Math.floor(h / 24);
+  return `za ${d} ${d === 1 ? 'dzień' : 'dni'}`;
+};
+async function sha256(tekst) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(tekst));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+const SVG_KLODKA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const SVG_OK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+
+/* ---------- tryb demo (bez Firebase) ---------- */
+const DEMO_ZAGADKI = [
+  { nr: 1, typ: 'Numery liter', tytul: 'Na rozgrzewkę', tresc: 'Zwierzak, który mruczy.', kod: '14 · 20 · 26', odp: ['KOT'], podp: 'Tabela „Alfabet i numery liter”: 14 = K.' },
+  { nr: 2, typ: 'Zagadka', tytul: 'Policz', tresc: 'Ile nóg ma pająk?', kod: '', odp: ['8', 'OSIEM'], podp: 'Więcej niż kot, mniej niż stonoga.', litera: 'A' },
+  { nr: 3, typ: 'Morse', tytul: 'Sygnał', tresc: 'Co nadaje statek w kłopotach?', kod: '•••   –––   •••', odp: ['SOS'], podp: '••• to S.' },
+  { nr: 4, typ: 'Klawiatura', tytul: 'Poranek', tresc: 'Co pije się rano?', kod: '55 2 9 2', odp: ['KAWA'], podp: '55 to druga litera na klawiszu 5, czyli K.', litera: 'G' },
+  { nr: 5, typ: 'Przesunięcie', tytul: 'O jedno w tył', tresc: 'Cofnij każdą literę o 1 pole w alfabecie.', kod: 'LÓU', odp: ['KOT'], podp: 'L cofnięte o 1 to K.' },
+  { nr: 6, typ: 'Gaderypoluki', tytul: 'Harcerski', tresc: 'Zamień litery z par GA, DE, RY, PO, LU, KI.', kod: 'IPT', odp: ['KOT'], podp: 'I zamienia się na K.', litera: 'Z' },
+  { nr: 7, typ: 'Polibiusz', tytul: 'Kwadrat', tresc: 'Wiersz, potem kolumna.', kod: '32 42 52', odp: ['KOT'], podp: '32 to wiersz 3, kolumna 2.' },
+  { nr: 8, typ: 'Atbasz', tytul: 'Od tyłu', tresc: 'Alfabet czytany od tyłu.', kod: 'ŃJE', odp: ['KOT'], podp: 'Ń zamienia się na K.', litera: 'A' }
+];
+for (let nr = 9; nr <= 14; nr++) {
+  DEMO_ZAGADKI.push({ nr, typ: 'Test', tytul: `Zagadka testowa ${nr}`, tresc: 'Odpowiedź to TEST.', kod: '', odp: ['TEST'], podp: 'Naprawdę: TEST.', litera: { 10: 'D', 12: 'K', 14: 'A' }[nr] });
+}
+DEMO_ZAGADKI.push({ nr: 15, typ: 'Finał', tytul: 'Ostatnie hasło', tresc: 'Masz 7 liter, po jednej z każdego dnia. Ułóż z nich jedno słowo.', kod: '', odp: ['ZAGADKA'], podp: 'Słowo ma 7 liter. To, co właśnie rozwiązujesz.', wiadomosc: 'To jest tryb demo. Tutaj w prawdziwej grze będzie Twoja wiadomość na koniec.' });
+
+function demoApi() {
+  const KLUCZ = 'zostaw-demo';
+  let pam = null;
+  try { pam = JSON.parse(localStorage.getItem(KLUCZ)); } catch (e) { /* brak pamięci */ }
+  if (!pam) pam = { zalogowany: false, wszystko: false, rozwiazane: [], podpowiedzi: [], pominiete: [] };
+  const zapisz = () => { try { localStorage.setItem(KLUCZ, JSON.stringify(pam)); } catch (e) { /* trudno */ } };
+  const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 2);
+  const start = d.getTime();
+  const otwarcie = (dz) => (pam.wszystko ? start : start + (dz - 1) * 86400000);
+  const z = (nr) => DEMO_ZAGADKI.find((x) => x.nr === nr);
+  return {
+    demo: true,
+    async zapamietany() { return pam.zalogowany; },
+    async zaloguj(haslo) { if (S.normalizuj(haslo) !== 'DEMO') throw { code: 'auth/invalid-credential' }; pam.zalogowany = true; zapisz(); },
+    async wyloguj() { pam.zalogowany = false; zapisz(); },
+    async harmonogram() { return { otwarcie }; },
+    async zagadki() {
+      return DEMO_ZAGADKI.map((x) => (Date.now() >= otwarcie(S.dzienPaczki(x.nr))
+        ? { nr: x.nr, typ: x.typ, tytul: x.tytul, tresc: x.tresc, kod: x.kod }
+        : { nr: x.nr, zablokowana: true }));
+    },
+    async postep() { return { rozwiazane: [...pam.rozwiazane], podpowiedzi: [...pam.podpowiedzi], pominiete: [...pam.pominiete] }; },
+    async sprawdz(zag, odp) { return z(zag.nr).odp.map(S.normalizuj).includes(S.normalizuj(odp)); },
+    async rozwiaz(nr) { if (!pam.rozwiazane.includes(nr)) pam.rozwiazane.push(nr); zapisz(); },
+    async pomin(nr) {
+      if (!pam.pominiete.includes(nr)) { if (pam.pominiete.length >= LIMIT) throw new Error('limit'); pam.pominiete.push(nr); }
+      zapisz();
+    },
+    async podpowiedz(nr) {
+      if (!pam.podpowiedzi.includes(nr)) { if (pam.podpowiedzi.length >= LIMIT) throw new Error('limit'); pam.podpowiedzi.push(nr); zapisz(); }
+      return z(nr).podp;
+    },
+    async nagroda(nr) { const x = z(nr); return { wiadomosc: x.wiadomosc || '', litera: x.litera || '' }; },
+    otworzWszystko() { pam.wszystko = true; zapisz(); },
+    wyczysc() { pam = { zalogowany: true, wszystko: pam.wszystko, rozwiazane: [], podpowiedzi: [], pominiete: [] }; zapisz(); }
+  };
+}
+
+/* ---------- prawdziwa gra (Firebase) ---------- */
+async function firebaseApi() {
+  const B = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const [{ initializeApp }, A, F] = await Promise.all([
+    import(B + 'firebase-app.js'), import(B + 'firebase-auth.js'), import(B + 'firebase-firestore.js')
+  ]);
+  const app = initializeApp(CFG.firebase);
+  const auth = A.getAuth(app);
+  const db = F.getFirestore(app);
+  let ustawienia = null;
+  const mojPostep = () => F.doc(db, 'postep', auth.currentUser.uid);
+  const naLiczby = (l) => (Array.isArray(l) ? l.map(Number) : []);
+  return {
+    demo: false,
+    async zapamietany() {
+      await auth.authStateReady();
+      if (auth.currentUser && auth.currentUser.email !== CFG.graczEmail) { await A.signOut(auth); return false; }
+      return !!auth.currentUser;
+    },
+    async zaloguj(haslo) { await A.signInWithEmailAndPassword(auth, CFG.graczEmail, haslo); },
+    async wyloguj() { await A.signOut(auth); },
+    async harmonogram() {
+      const s = await F.getDoc(F.doc(db, 'ustawienia', 'gra'));
+      if (!s.exists()) throw new Error('brak-gry');
+      ustawienia = s.data();
+      const [y, m, d] = String(ustawienia.start).split('-').map(Number);
+      return { otwarcie: (dz) => S.warszawaNaUtc(y, m, d + dz - 1, Number(ustawienia.godzina) || 0) };
+    },
+    async zagadki() {
+      const lista = [];
+      for (let nr = 1; nr <= LICZBA; nr++) lista.push(nr);
+      return Promise.all(lista.map(async (nr) => {
+        try {
+          const s = await F.getDoc(F.doc(db, 'zagadki', nrId(nr)));
+          return s.exists() ? { ...s.data(), nr } : { nr, zablokowana: true };
+        } catch (e) {
+          if (e && e.code !== 'permission-denied') console.warn(e);
+          return { nr, zablokowana: true };
+        }
+      }));
+    },
+    async postep() {
+      const ref = mojPostep();
+      const s = await F.getDoc(ref);
+      if (!s.exists()) {
+        const pusty = { rozwiazane: [], podpowiedzi: [], pominiete: [] };
+        await F.setDoc(ref, pusty);
+        return pusty;
+      }
+      const d = s.data();
+      return { rozwiazane: naLiczby(d.rozwiazane), podpowiedzi: naLiczby(d.podpowiedzi), pominiete: naLiczby(d.pominiete) };
+    },
+    async sprawdz(zag, odp) {
+      const h = await sha256(`${ustawienia.sol}|${nrId(zag.nr)}|${S.normalizuj(odp)}`);
+      return Array.isArray(zag.hashe) && zag.hashe.includes(h);
+    },
+    async rozwiaz(nr) { await F.updateDoc(mojPostep(), { rozwiazane: F.arrayUnion(nrId(nr)) }); },
+    async pomin(nr) { await F.updateDoc(mojPostep(), { pominiete: F.arrayUnion(nrId(nr)) }); },
+    async podpowiedz(nr) {
+      await F.updateDoc(mojPostep(), { podpowiedzi: F.arrayUnion(nrId(nr)) });
+      const s = await F.getDoc(F.doc(db, 'podpowiedzi', nrId(nr)));
+      return s.exists() ? s.data().tekst : '';
+    },
+    async nagroda(nr) {
+      const s = await F.getDoc(F.doc(db, 'nagrody', nrId(nr)));
+      return s.exists() ? s.data() : {};
+    }
+  };
+}
+
+/* ---------- stan i widok ---------- */
+let api;
+const st = { otwarcie: null, zagadki: [], postep: null, nagrody: {}, podpowiedzi: {}, wpisane: {}, pytanie: null, zajete: null, komunikat: {}, blad: '' };
+
+const zrobiona = (nr) => st.postep.rozwiazane.includes(nr) || st.postep.pominiete.includes(nr);
+const zostaloPodp = () => LIMIT - st.postep.podpowiedzi.length;
+const zostaloPom = () => LIMIT - st.postep.pominiete.length;
+
+function kropki(uzyte) {
+  let h = '';
+  for (let i = 0; i < LIMIT; i++) h += `<span class="kropka${i < uzyte ? ' uzyta' : ''}"></span>`;
+  return `<span class="kropki">${h}<small>zostały ${LIMIT - uzyte}</small></span>`;
+}
+
+function widokLogowania(blad = '') {
+  $app.innerHTML = `
+    <main class="logowanie">
+      <p class="mala">Paczka nr 0</p>
+      <h1>Może ci się przydać</h1>
+      <p>Wpisz hasło, które ode mnie dostałaś.</p>
+      <form id="logowanie" class="wiersz" novalidate>
+        <label class="sr" for="haslo">Hasło</label>
+        <input class="pole" id="haslo" type="password" autocomplete="current-password" required>
+        <button class="przycisk" type="submit">Wejdź</button>
+      </form>
+      <p class="komunikat zle" role="alert">${esc(blad)}</p>
+      ${api.demo ? '<p class="uwaga">Tryb demo: hasło to <b>demo</b>.</p>' : ''}
+    </main>`;
+  document.getElementById('haslo').focus();
+}
+
+function kartaOtwarta(z) {
+  const nr = z.nr;
+  const zaj = st.zajete === nr;
+  const kom = st.komunikat[nr];
+  let akcje;
+  if (st.pytanie && st.pytanie.nr === nr) {
+    const podp = st.pytanie.co === 'podp';
+    const ile = podp ? zostaloPodp() - 1 : zostaloPom() - 1;
+    akcje = `<div class="pytanie"><p>${podp ? 'Użyć podpowiedzi?' : 'Pominąć tę zagadkę?'} Zostanie ${ile} z ${LIMIT}.</p>
+      <button class="przycisk" type="button" data-a="tak" data-nr="${nr}"${zaj ? ' disabled' : ''}>Tak</button>
+      <button class="tekstowy" type="button" data-a="nie" data-nr="${nr}">Nie</button></div>`;
+  } else {
+    const maPodp = st.podpowiedzi[nr] !== undefined;
+    const bPodp = maPodp ? '' : (zostaloPodp() > 0
+      ? `<button class="tekstowy" type="button" data-a="podp" data-nr="${nr}">Podpowiedź</button>`
+      : '<span class="uwaga">Podpowiedzi się skończyły</span>');
+    const bPom = zostaloPom() > 0
+      ? `<button class="tekstowy" type="button" data-a="pomin" data-nr="${nr}">Pomiń</button>`
+      : '<span class="uwaga">Pominięcia się skończyły</span>';
+    akcje = `<div class="akcje">${bPodp}${bPom}</div>`;
+  }
+  return `
+    <article class="karta" id="z${nr}">
+      <div class="karta-gora"><span class="paczka">Paczka ${nr}</span>${z.typ ? `<span class="typ">${esc(z.typ)}</span>` : ''}</div>
+      ${z.tytul ? `<h3>${esc(z.tytul)}</h3>` : ''}
+      ${z.tresc ? `<p class="tresc">${esc(z.tresc)}</p>` : ''}
+      ${z.kod ? `<div class="kod">${esc(z.kod)}</div>` : ''}
+      ${st.podpowiedzi[nr] !== undefined ? `<p class="podp"><b>Podpowiedź</b>${esc(st.podpowiedzi[nr])}</p>` : ''}
+      <form class="wiersz" data-nr="${nr}" novalidate>
+        <label class="sr" for="odp${nr}">Odpowiedź do paczki ${nr}</label>
+        <input class="pole" id="odp${nr}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Odpowiedź" value="${esc(st.wpisane[nr] || '')}">
+        <button class="przycisk" type="submit"${zaj ? ' disabled' : ''}>Sprawdź</button>
+      </form>
+      <p class="komunikat${kom && kom.zle ? ' zle' : ''}" aria-live="polite">${esc(kom ? kom.tekst : '')}</p>
+      ${akcje}
+    </article>`;
+}
+
+function kartaZrobiona(z) {
+  const nr = z.nr;
+  const n = st.nagrody[nr] || {};
+  const pom = !st.postep.rozwiazane.includes(nr);
+  const final = nr === LICZBA;
+  return `
+    <article class="karta zrobiona${final ? ' final' : ''}" id="z${nr}">
+      <div class="karta-gora"><span class="paczka">Paczka ${nr}</span><span class="znacznik">${SVG_OK}${pom ? 'Pominięta' : 'Rozwiązana'}</span></div>
+      <p class="otworz">Otwórz paczkę nr ${nr}</p>
+      ${n.wiadomosc ? `<p class="wiadomosc">${esc(n.wiadomosc)}</p>` : ''}
+      ${n.litera ? `<p class="dostales"><span class="litera jest">${esc(n.litera)}</span>Litera dnia. Wpisz ją też na karcie.</p>` : ''}
+      ${z.tresc || z.kod ? `<details><summary>Pokaż zagadkę</summary>${z.tresc ? `<p class="tresc">${esc(z.tresc)}</p>` : ''}${z.kod ? `<div class="kod">${esc(z.kod)}</div>` : ''}</details>` : ''}
+    </article>`;
+}
+
+function widokGry() {
+  const pierwsza = document.activeElement && document.activeElement.id;
+  const zaDni = {};
+  st.zagadki.forEach((z) => { (zaDni[S.dzienPaczki(z.nr)] ||= []).push(z); });
+
+  // litery z dni 1–7
+  const litery = [];
+  for (let d = 1; d <= 7; d++) {
+    const l = (zaDni[d] || []).map((z) => (st.nagrody[z.nr] || {}).litera).find(Boolean) || '';
+    litery.push(`<span class="litera${l ? ' jest' : ''}" aria-label="Dzień ${d}: ${l || 'jeszcze brak'}">${esc(l)}</span>`);
+  }
+
+  const teraz = Date.now();
+  let nastepna = null;
+  for (let d = 1; d <= 8; d++) { const t = st.otwarcie(d); if (t > teraz) { nastepna = { d, t }; break; } }
+
+  let dni = '';
+  for (let d = 1; d <= 8; d++) {
+    const lista = (zaDni[d] || []).sort((a, b) => a.nr - b.nr);
+    const t = st.otwarcie(d);
+    const otwarte = lista.filter((z) => !z.zablokowana);
+    const paczki = lista.map((z) => z.nr).join(' i ');
+    let srodek;
+    if (!otwarte.length) {
+      srodek = `<div class="zamkniety">${SVG_KLODKA}<span>Paczki ${esc(paczki)}. Otworzy się <b>${t > teraz ? `${fmtDzien(t)} o ${fmtGodz(t)}` : 'wkrótce'}</b>.</span></div>`;
+    } else {
+      srodek = lista.map((z) => (z.zablokowana
+        ? `<div class="zamkniety">${SVG_KLODKA}<span>Paczka ${z.nr} jeszcze zamknięta.</span></div>`
+        : (zrobiona(z.nr) ? kartaZrobiona(z) : kartaOtwarta(z)))).join('');
+    }
+    dni += `<section class="dzien" aria-label="Dzień ${d}">
+      <div class="dzien-tytul"><h2>${d === 8 ? 'Finał' : `Dzień ${d}`}</h2><span class="data">${fmtDzien(t)}</span></div>
+      ${srodek}</section>`;
+  }
+
+  $app.innerHTML = `
+    ${api.demo ? `<div class="demo-pasek"><span>Tryb demo. Nic się nie zapisuje w internecie.</span>
+      <span><button class="tekstowy" type="button" data-a="demo-wszystko">Otwórz wszystkie dni</button>
+      <button class="tekstowy" type="button" data-a="demo-czysc">Wyczyść postęp</button></span></div>` : ''}
+    ${st.blad ? `<p class="blad-ogolny" role="alert">${esc(st.blad)}</p>` : ''}
+    <header class="naglowek">
+      <div><p class="mala">Paczka nr 0</p><h1>Może ci się przydać</h1></div>
+      <div class="liczniki">
+        <div class="licznik"><span>Podpowiedzi</span>${kropki(st.postep.podpowiedzi.length)}</div>
+        <div class="licznik"><span>Pominięcia</span>${kropki(st.postep.pominiete.length)}</div>
+      </div>
+      <div class="litery"><span class="etykieta">Litery do finału</span><div class="litery-rzad">${litery.join('')}</div></div>
+      ${nastepna ? `<p class="nastepna" id="nastepna">Następne zagadki: <b>${fmtDzien(nastepna.t)} o ${fmtGodz(nastepna.t)}</b> (${zaIle(nastepna.t)})</p>` : ''}
+    </header>
+    <div class="dni">${dni}</div>
+    <footer class="stopka"><span>Postęp zapisuje się sam.</span><button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></footer>`;
+  if (pierwsza) { const el = document.getElementById(pierwsza); if (el) el.focus(); }
+}
+
+/* ---------- ładowanie ---------- */
+async function wczytaj() {
+  const h = await api.harmonogram();
+  const [z, p] = await Promise.all([api.zagadki(), api.postep()]);
+  st.otwarcie = h.otwarcie; st.zagadki = z; st.postep = p;
+  const zrob = [...p.rozwiazane, ...p.pominiete].filter((nr) => !st.nagrody[nr]);
+  await Promise.all(zrob.map(async (nr) => { st.nagrody[nr] = await api.nagroda(nr); }));
+  const otwarteNr = z.filter((x) => !x.zablokowana).map((x) => x.nr);
+  await Promise.all(p.podpowiedzi.filter((nr) => st.podpowiedzi[nr] === undefined && otwarteNr.includes(nr) && !zrobiona(nr))
+    .map(async (nr) => { st.podpowiedzi[nr] = await api.podpowiedz(nr); }));
+}
+
+async function startGry(przewin = true) {
+  try {
+    await wczytaj();
+  } catch (e) {
+    console.error(e);
+    $app.innerHTML = `<main class="logowanie"><p class="mala">Paczka nr 0</p><h1>Jeszcze chwila</h1>
+      <p>${e && e.message === 'brak-gry' ? 'Gra nie jest jeszcze gotowa. Zajrzyj tu później.' : 'Nie udało się wczytać gry. Sprawdź internet i odśwież stronę.'}</p>
+      <button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></main>`;
+    return;
+  }
+  widokGry();
+  if (przewin) {
+    const cel = st.zagadki.find((z) => !z.zablokowana && !zrobiona(z.nr));
+    if (cel) document.getElementById(`z${cel.nr}`)?.scrollIntoView({ block: 'start' });
+  }
+}
+
+/* ---------- akcje ---------- */
+const BLAD_SIECI = 'Coś poszło nie tak. Sprawdź internet i spróbuj jeszcze raz.';
+
+async function poZrobieniu(nr) {
+  st.nagrody[nr] = await api.nagroda(nr);
+  st.postep = await api.postep();
+}
+
+$app.addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const f = ev.target;
+  if (f.id === 'logowanie') {
+    const haslo = document.getElementById('haslo').value;
+    if (!haslo) return;
+    f.querySelector('button').disabled = true;
+    try {
+      await api.zaloguj(haslo);
+      $app.innerHTML = '<div class="ladowanie">Chwileczkę…</div>';
+      await startGry();
+    } catch (e) {
+      const c = e && e.code;
+      widokLogowania(c === 'auth/too-many-requests' ? 'Za dużo prób. Odczekaj chwilę.'
+        : (c === 'auth/network-request-failed' ? 'Brak internetu?' : 'To nie to hasło.'));
+    }
+    return;
+  }
+  const nr = Number(f.dataset.nr);
+  if (!nr || st.zajete) return;
+  const pole = f.querySelector('input');
+  const odp = pole.value;
+  st.wpisane[nr] = odp;
+  if (!S.normalizuj(odp)) { st.komunikat[nr] = { zle: true, tekst: 'Najpierw coś wpisz.' }; widokGry(); return; }
+  st.zajete = nr; st.komunikat[nr] = null; widokGry();
+  try {
+    const z = st.zagadki.find((x) => x.nr === nr);
+    if (await api.sprawdz(z, odp)) {
+      await api.rozwiaz(nr);
+      await poZrobieniu(nr);
+      st.zajete = null; widokGry();
+      document.getElementById(`z${nr}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    } else {
+      st.zajete = null;
+      st.komunikat[nr] = { zle: true, tekst: 'Jeszcze nie. Spróbuj inaczej.' };
+      widokGry();
+      const el = document.getElementById(`odp${nr}`);
+      if (el) { el.classList.add('trzes'); el.focus(); el.select(); }
+    }
+  } catch (e) {
+    console.error(e);
+    st.zajete = null; st.komunikat[nr] = { zle: true, tekst: BLAD_SIECI }; widokGry();
+  }
+});
+
+$app.addEventListener('input', (ev) => {
+  const m = ev.target.id && ev.target.id.match(/^odp(\d+)$/);
+  if (m) st.wpisane[Number(m[1])] = ev.target.value;
+});
+
+$app.addEventListener('click', async (ev) => {
+  const b = ev.target.closest('button[data-a]');
+  if (!b) return;
+  const a = b.dataset.a, nr = Number(b.dataset.nr);
+  if (a === 'wyloguj') { await api.wyloguj(); widokLogowania(); return; }
+  if (a === 'demo-wszystko') { api.otworzWszystko(); await startGry(false); return; }
+  if (a === 'demo-czysc') { api.wyczysc(); st.nagrody = {}; st.podpowiedzi = {}; st.wpisane = {}; st.komunikat = {}; await startGry(false); return; }
+  if (a === 'podp' || a === 'pomin') { st.pytanie = { nr, co: a }; widokGry(); return; }
+  if (a === 'nie') { st.pytanie = null; widokGry(); return; }
+  if (a === 'tak' && st.pytanie && !st.zajete) {
+    const co = st.pytanie.co;
+    st.zajete = nr; widokGry();
+    try {
+      if (co === 'podp') {
+        st.podpowiedzi[nr] = await api.podpowiedz(nr);
+        st.postep = await api.postep();
+      } else {
+        await api.pomin(nr);
+        await poZrobieniu(nr);
+      }
+      st.pytanie = null; st.zajete = null; widokGry();
+    } catch (e) {
+      console.error(e);
+      st.pytanie = null; st.zajete = null; st.komunikat[nr] = { zle: true, tekst: BLAD_SIECI }; widokGry();
+    }
+  }
+});
+
+// Co pół minuty: odśwież „za ile”, a gdy wybije godzina, wczytaj nowe zagadki.
+setInterval(async () => {
+  if (!st.postep || !st.otwarcie || st.zajete) return;
+  const zamkniete = st.zagadki.filter((z) => z.zablokowana);
+  if (zamkniete.some((z) => Date.now() >= st.otwarcie(S.dzienPaczki(z.nr)))) {
+    try { st.zagadki = await api.zagadki(); widokGry(); } catch (e) { /* spróbuje znowu */ }
+  } else {
+    const el = document.getElementById('nastepna');
+    if (el) {
+      for (let d = 1; d <= 8; d++) {
+        const t = st.otwarcie(d);
+        if (t > Date.now()) { el.innerHTML = `Następne zagadki: <b>${fmtDzien(t)} o ${fmtGodz(t)}</b> (${zaIle(t)})`; break; }
+      }
+    }
+  }
+}, 30000);
+
+/* ---------- start ---------- */
+(async () => {
+  try {
+    api = DEMO ? demoApi() : await firebaseApi();
+  } catch (e) {
+    console.error(e);
+    $app.innerHTML = '<main class="logowanie"><h1>Ups</h1><p>Nie udało się uruchomić strony. Sprawdź internet i odśwież.</p></main>';
+    return;
+  }
+  if (await api.zapamietany()) await startGry(); else widokLogowania();
+})();
+</script>
+</body>
+</html>
