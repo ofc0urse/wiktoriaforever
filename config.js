@@ -4,12 +4,12 @@
    Te dane NIE są tajne: bezpieczeństwo zapewniają reguły Firestore. */
 window.ZOSTAW_CONFIG = {
   firebase: {
-    apiKey: '',
-    authDomain: '',
-    projectId: '',
-    storageBucket: '',
-    messagingSenderId: '',
-    appId: ''
+    apiKey: 'AIzaSyCO-OIiNDtm75acTK7soblSLLdVQVWLMrY',
+    authDomain: 'wiktoria-26-03-2011.firebaseapp.com',
+    projectId: 'wiktoria-26-03-2011',
+    storageBucket: 'wiktoria-26-03-2011.firebasestorage.app',
+    messagingSenderId: '932147418978',
+    appId: '1:932147418978:web:e02bd963adff2ddee2fe3b'
   },
   // Konta zakładasz w Firebase → Authentication → Users → Add user.
   graczEmail: 'gracz@example.com',
