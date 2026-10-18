@@ -190,6 +190,15 @@
   }
   @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 12px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
   .komunikat.jajko { color: var(--zielen-ciemna); }
+  .klodka { flex: none; width: 44px; height: 44px; margin: -8px 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: inherit; cursor: pointer; border-radius: 10px; }
+  .klodka:active svg { transform: rotate(-12deg); }
+  .deszcz.ciasto { width: 40px; height: 40px; }
+  .deszcz.cyfra-deszcz { width: auto; height: auto; font-family: var(--odr); font-size: 54px; font-weight: 700; line-height: 1; color: var(--zielen); }
+  .pasek-urodzin {
+    position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 60;
+    width: max-content; max-width: min(92vw, 420px); padding: 10px 16px; border-radius: 14px; background: #F6D8DC; border: 2px solid #B8324F;
+    color: var(--tusz); font-weight: 800; text-align: center; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  }
   @media (prefers-reduced-motion: reduce) { .kot .ogon, .kot.mruczy svg, .serce, .deszcz { animation: none; } .serce, .deszcz { display: none; } }
   .blad-ogolny { padding: 12px 14px; border-radius: 12px; border: 2px solid var(--blad); color: var(--blad); font-weight: 700; margin-bottom: 18px; }
 </style>
@@ -230,7 +239,7 @@ async function sha256(tekst) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(tekst));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
-const SVG_KLODKA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const SVG_KLODKA = '<button class="klodka" type="button" data-klodka aria-label="Kłódka"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>';
 const SVG_OK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
 
 /* ---------- kot i niespodzianki ---------- */
@@ -278,6 +287,7 @@ let glaski = 0;
 try { glaski = Number(localStorage.getItem('zostaw-glaski')) || 0; } catch (e) { /* bez pamięci */ }
 const GLASKI = {
   1: 'Mrrr. Jeszcze!',
+  15: '15? Moje urodziny, hah?',
   10: 'Kot Cię polubił.',
   26: '26 głasków, tyle co dzień Twoich urodzin :)',
   50: 'Kot już nie wstanie z tej kanapy.',
@@ -312,8 +322,52 @@ const JAJKA = {
   MIAU: { tekst: 'Miau! Kot u góry odpowiada.' },
   KOT: { tekst: 'Kot jest u góry. Pogłaszcz go, może coś podpowie (nie podpowie).' },
   NEFERA: { tekst: 'Nefera pozdrawia. Ale to nie ta odpowiedź.' },
-  ASDF: { tekst: 'Klawiatura nie jest szyfrem :)' }
+  ASDF: { tekst: 'Klawiatura nie jest szyfrem :)' },
+  67: { tekst: '67 67', liczby: true },
+  PASLEK: { tekst: 'Pasłęk, tak, to miasto, obok którego mieszkasz.' },
+  CHIVAS: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
+  TACOHEMINGWAY: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
+  TACOHEMIGWAY: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
+  TACO: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
+  CHCEMYTEGOWIECEJ: { tekst: 'To nie ten utwór, ale lubisz go bardzo.' },
+  TONASZAPIOSENKA: { tekst: 'Niestety też nie, ale to mój ulubiony, haha.' }
 };
+
+// Deszcz dowolnego obrazka albo tekstu (ciasta, cyfry).
+function deszcz(html, ile, klasa = '') {
+  for (let i = 0; i < ile; i++) {
+    const s = document.createElement('span');
+    s.className = `deszcz ${klasa}`; s.innerHTML = html;
+    s.style.left = `${Math.random() * 92}vw`;
+    s.style.animationDuration = `${2.4 + Math.random() * 2}s`;
+    s.style.animationDelay = `${Math.random() * 0.9}s`;
+    document.body.append(s);
+    setTimeout(() => s.remove(), 5500);
+  }
+}
+function deszczLiczb() { deszcz('6', 10, 'cyfra-deszcz'); deszcz('7', 10, 'cyfra-deszcz'); }
+
+const CIASTO = '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="19" y="3" width="2.4" height="8" rx="1" fill="#E8B4B8"/><path d="M20.2 0.5c1.6 1.6 1.6 3.2 0 4-1.6-.8-1.6-2.4 0-4z" fill="#F2B544"/><rect x="7" y="11" width="26" height="10" rx="3" fill="#F6D8DC" stroke="#B8324F" stroke-width="1.2"/><rect x="4" y="20" width="32" height="14" rx="3" fill="#E8B4B8" stroke="#B8324F" stroke-width="1.2"/><path d="M4 25q4 3 8 0t8 0 8 0 8 0" fill="none" stroke="#FFFDF8" stroke-width="2"/><rect x="2" y="33" width="36" height="4" rx="2" fill="#D9D2CC"/></svg>';
+
+// 19:10 czasu polskiego: wtedy się urodziłem. Przez całą minutę spadają ciasta.
+let urodzinyAktywne = false, pasekUrodzin = null;
+function godzinaWarszawa() {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date());
+}
+function sprawdzUrodziny() {
+  const teraz = godzinaWarszawa() === '19:10';
+  if (teraz && !urodzinyAktywne) {
+    urodzinyAktywne = true;
+    pasekUrodzin = document.createElement('div');
+    pasekUrodzin.className = 'pasek-urodzin'; pasekUrodzin.setAttribute('role', 'status');
+    pasekUrodzin.textContent = '19:10. Tak, to o tej godzinie się urodziłem ;)';
+    document.body.append(pasekUrodzin);
+  }
+  if (teraz) deszcz(CIASTO, 6, 'ciasto');
+  if (!teraz && urodzinyAktywne) { urodzinyAktywne = false; pasekUrodzin?.remove(); pasekUrodzin = null; }
+}
+setInterval(sprawdzUrodziny, 2500);
+setTimeout(sprawdzUrodziny, 500);
 
 let klikTytul = 0, klikCzas = 0;
 function sekretTytulu() {
@@ -800,6 +854,7 @@ $app.addEventListener('submit', async (ev) => {
       st.komunikat[nr] = jajko ? { jajko: true, tekst: jajko.tekst } : { zle: true, tekst: 'Jeszcze nie. Spróbuj inaczej.' };
       widokGry();
       if (jajko && jajko.serca) deszczSerc(14);
+      if (jajko && jajko.liczby) deszczLiczb();
       if (S.normalizuj(odp) === 'MIAU') { const k = document.querySelector('[data-kot]'); if (k) glaszcz(k); }
       const el = document.getElementById(`odp${nr}`);
       if (el) { el.classList.add('trzes'); el.focus(); el.select(); }
@@ -818,6 +873,7 @@ $app.addEventListener('input', (ev) => {
 $app.addEventListener('click', async (ev) => {
   const kot = ev.target.closest('[data-kot]');
   if (kot) { glaszcz(kot); return; }
+  if (ev.target.closest('[data-klodka]')) { toast('Bardzo chciałbym ci dać klucz, ale musisz poczekać :('); return; }
   if (ev.target.closest('[data-sekret]')) { sekretTytulu(); return; }
   const b = ev.target.closest('button[data-a]');
   if (!b) return;
