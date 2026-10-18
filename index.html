@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FFFDF8">
 <meta name="robots" content="noindex, nofollow">
-<title>Może ci się przydać</title>
+<title>Hejj</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=JetBrains+Mono:wght@700&family=Nunito:wght@400;600;800&display=swap">
@@ -128,6 +128,37 @@
   }
   .demo-pasek .tekstowy { min-height: 32px; font-size: 14px; }
   .ladowanie { min-height: 70vh; display: flex; align-items: center; justify-content: center; font-family: var(--odr); font-size: 32px; color: var(--szary); }
+  /* Skan twarzy */
+  .skan, .czekanie { min-height: 86vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+  .skan p, .czekanie p { margin: 0; }
+  .ramka {
+    position: relative; width: min(78vw, 300px); aspect-ratio: 1; border-radius: 50%; overflow: hidden;
+    border: 4px solid var(--zielen); background: #EEE8E2; margin: 8px 0;
+  }
+  .ramka video, .ramka img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ramka video { transform: scaleX(-1); }
+  .ramka .linia {
+    position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--zielen);
+    box-shadow: 0 0 14px 4px rgba(47, 107, 58, 0.55); animation: skanuj 2.2s ease-in-out infinite alternate;
+  }
+  .ramka.bez-kamery .linia, .ramka img ~ .linia { display: none; }
+  @keyframes skanuj { from { top: 4%; } to { top: 95%; } }
+  .ramka .licz { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 96px; font-weight: 800; color: #fff; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); }
+  .ramka.blysk::after { content: ''; position: absolute; inset: 0; background: #fff; animation: blysk 0.5s forwards; }
+  @keyframes blysk { from { opacity: 1; } to { opacity: 0; } }
+  .usmiech { font-family: var(--odr); font-size: 40px; font-weight: 700; line-height: 1; color: var(--zielen); }
+  .skan-akcje { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .jako-przycisk { display: inline-flex; align-items: center; }
+  /* Odliczanie */
+  .zegar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 420px; }
+  .cyfra { border: 2px solid var(--tusz); border-radius: 14px; padding: 10px 4px; display: flex; flex-direction: column; align-items: center; background: #fff; }
+  .cyfra b { font-size: 34px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .cyfra small { font-size: 13px; font-weight: 800; color: var(--szary); }
+  .kiedy { font-weight: 800; font-size: 19px; }
+  .wielka { font-family: var(--odr); font-size: 140px; font-weight: 700; line-height: 1; color: var(--zielen); }
+  .puls { animation: puls 0.8s ease-out; }
+  @keyframes puls { from { transform: scale(1.6); opacity: 0; } 30% { opacity: 1; } to { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .ramka .linia, .puls { animation: none; } }
   .blad-ogolny { padding: 12px 14px; border-radius: 12px; border: 2px solid var(--blad); color: var(--blad); font-weight: 700; margin-bottom: 18px; }
 </style>
 </head>
@@ -146,6 +177,8 @@ const $app = document.getElementById('app');
 /* ---------- pomocnicze ---------- */
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const nrId = (nr) => String(nr).padStart(2, '0');
+const hasloFirebase = (h) => S.normalizuj(h).toLowerCase() + (CFG.koncowkaHasla || '');
+const HASLO_DEMO = '1943eb52b1e009541d27114cbd29abb2c5e15682682446390f9e976e543949ad'; // skrót hasła w trybie demo
 const fmtDzien = (ms) => {
   const p = {};
   new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', weekday: 'short', day: 'numeric', month: 'numeric' })
@@ -197,7 +230,7 @@ function demoApi() {
   return {
     demo: true,
     async zapamietany() { return pam.zalogowany; },
-    async zaloguj(haslo) { if (S.normalizuj(haslo) !== 'DEMO') throw { code: 'auth/invalid-credential' }; pam.zalogowany = true; zapisz(); },
+    async zaloguj(haslo) { if (await sha256(S.normalizuj(haslo)) !== HASLO_DEMO) throw { code: 'auth/invalid-credential' }; pam.zalogowany = true; zapisz(); },
     async wyloguj() { pam.zalogowany = false; zapisz(); },
     async harmonogram() { return { otwarcie }; },
     async zagadki() {
@@ -241,7 +274,8 @@ async function firebaseApi() {
       if (auth.currentUser && auth.currentUser.email !== CFG.graczEmail) { await A.signOut(auth); return false; }
       return !!auth.currentUser;
     },
-    async zaloguj(haslo) { await A.signInWithEmailAndPassword(auth, CFG.graczEmail, haslo); },
+    // Firebase wymaga min. 6 znaków, więc do wpisanego hasła doklejamy stałą końcówkę.
+    async zaloguj(haslo) { await A.signInWithEmailAndPassword(auth, CFG.graczEmail, hasloFirebase(haslo)); },
     async wyloguj() { await A.signOut(auth); },
     async harmonogram() {
       const s = await F.getDoc(F.doc(db, 'ustawienia', 'gra'));
@@ -309,16 +343,14 @@ function kropki(uzyte) {
 function widokLogowania(blad = '') {
   $app.innerHTML = `
     <main class="logowanie">
-      <p class="mala">Paczka nr 0</p>
-      <h1>Może ci się przydać</h1>
-      <p>Wpisz hasło, które ode mnie dostałaś.</p>
+      <h1>Hejj</h1>
+      <p>Aby przejść dalej, wpisz hasło:</p>
       <form id="logowanie" class="wiersz" novalidate>
         <label class="sr" for="haslo">Hasło</label>
-        <input class="pole" id="haslo" type="password" autocomplete="current-password" required>
-        <button class="przycisk" type="submit">Wejdź</button>
+        <input class="pole" id="haslo" type="password" autocomplete="current-password" autocapitalize="none" required>
+        <button class="przycisk" type="submit">Dalej</button>
       </form>
       <p class="komunikat zle" role="alert">${esc(blad)}</p>
-      ${api.demo ? '<p class="uwaga">Tryb demo: hasło to <b>demo</b>.</p>' : ''}
     </main>`;
   document.getElementById('haslo').focus();
 }
@@ -414,10 +446,11 @@ function widokGry() {
   $app.innerHTML = `
     ${api.demo ? `<div class="demo-pasek"><span>Tryb demo. Nic się nie zapisuje w internecie.</span>
       <span><button class="tekstowy" type="button" data-a="demo-wszystko">Otwórz wszystkie dni</button>
-      <button class="tekstowy" type="button" data-a="demo-czysc">Wyczyść postęp</button></span></div>` : ''}
+      <button class="tekstowy" type="button" data-a="demo-czysc">Wyczyść postęp</button>
+      <button class="tekstowy" type="button" data-a="demo-odliczanie">Podgląd odliczania</button></span></div>` : ''}
     ${st.blad ? `<p class="blad-ogolny" role="alert">${esc(st.blad)}</p>` : ''}
     <header class="naglowek">
-      <div><p class="mala">Paczka nr 0</p><h1>Może ci się przydać</h1></div>
+      <div><p class="mala">Hejj :)</p><h1>Twoje łamigłówki</h1></div>
       <div class="liczniki">
         <div class="licznik"><span>Podpowiedzi</span>${kropki(st.postep.podpowiedzi.length)}</div>
         <div class="licznik"><span>Pominięcia</span>${kropki(st.postep.pominiete.length)}</div>
@@ -442,16 +475,135 @@ async function wczytaj() {
     .map(async (nr) => { st.podpowiedzi[nr] = await api.podpowiedz(nr); }));
 }
 
-async function startGry(przewin = true) {
+/* ---------- skan twarzy ---------- */
+let strumien = null;
+const zatrzymajKamere = () => { if (strumien) { strumien.getTracks().forEach((t) => t.stop()); strumien = null; } };
+const czekaj = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function zrobZdjecie(zrodlo, w, h, lustro) {
+  const s = Math.min(w, h), rozm = 480;
+  const c = document.createElement('canvas');
+  c.width = rozm; c.height = rozm;
+  const ctx = c.getContext('2d');
+  if (lustro) { ctx.translate(rozm, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(zrodlo, (w - s) / 2, (h - s) / 2, s, s, 0, 0, rozm, rozm);
+  return c.toDataURL('image/jpeg', 0.75);
+}
+
+async function poSkanie(obraz) {
+  zatrzymajKamere();
+  const ramka = document.getElementById('ramka');
+  if (obraz && ramka) ramka.innerHTML = `<img src="${obraz}" alt="Twoje zdjęcie">`;
+  document.getElementById('skan-tytul').textContent = obraz ? 'Twarz rozpoznana' : 'Dobra, wierzę ci';
+  document.getElementById('skan-opis').textContent = obraz ? 'To na pewno Ty :)' : 'Wpuszczam bez skanu.';
+  document.getElementById('skan-akcje').innerHTML = '';
+  await czekaj(2200);
+  await startGry(true, true);
+}
+
+async function widokSkanu() {
+  $app.innerHTML = `
+    <main class="skan">
+      <h1 id="skan-tytul">Zeskanuj swoją twarz</h1>
+      <p id="skan-opis">aby przejść dalej</p>
+      <div class="ramka" id="ramka">
+        <video id="wideo" playsinline muted autoplay></video>
+        <span class="linia" aria-hidden="true"></span>
+        <span class="licz" id="licz" aria-live="assertive"></span>
+      </div>
+      <p class="usmiech">Uśmiechnij się :)</p>
+      <div class="skan-akcje" id="skan-akcje">
+        <button class="przycisk" type="button" id="skanuj" disabled>Skanuj</button>
+      </div>
+    </main>`;
+  const wideo = document.getElementById('wideo');
+  try {
+    strumien = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } }, audio: false });
+    wideo.srcObject = strumien;
+    await wideo.play().catch(() => {});
+    const btn = document.getElementById('skanuj');
+    btn.disabled = false;
+    btn.onclick = async () => {
+      btn.disabled = true;
+      const licz = document.getElementById('licz');
+      for (const t of ['3', '2', '1']) { licz.textContent = t; await czekaj(800); }
+      licz.textContent = '';
+      document.getElementById('ramka').classList.add('blysk');
+      const obraz = zrobZdjecie(wideo, wideo.videoWidth, wideo.videoHeight, true);
+      await poSkanie(obraz);
+    };
+  } catch (e) {
+    console.warn(e);
+    zatrzymajKamere();
+    document.getElementById('ramka').classList.add('bez-kamery');
+    document.getElementById('skan-akcje').innerHTML = `
+      <p class="uwaga">Nie mam dostępu do kamery. Zrób zdjęcie aparatem:</p>
+      <label class="przycisk jako-przycisk">Zrób zdjęcie<input type="file" accept="image/*" capture="user" id="aparat" class="sr"></label>
+      <button class="tekstowy" type="button" id="bez-skanu">Przejdź bez skanu</button>`;
+    document.getElementById('bez-skanu').onclick = () => poSkanie(null);
+    document.getElementById('aparat').onchange = (ev) => {
+      const f = ev.target.files[0];
+      if (!f) return;
+      const img = new Image();
+      img.onload = () => { const o = zrobZdjecie(img, img.naturalWidth, img.naturalHeight, false); URL.revokeObjectURL(img.src); poSkanie(o); };
+      img.src = URL.createObjectURL(f);
+    };
+  }
+}
+
+/* ---------- odliczanie ---------- */
+let zegar = null;
+const stopZegar = () => { if (zegar) { clearInterval(zegar); zegar = null; } };
+const dwa = (n) => String(n).padStart(2, '0');
+
+function widokCzekania(cel) {
+  stopZegar();
+  $app.innerHTML = `
+    <main class="czekanie">
+      <p class="mala">Hejj :)</p>
+      <h1>Pierwsza łamigłówka za</h1>
+      <div class="zegar" id="zegar" role="timer" aria-live="off"></div>
+      <p class="kiedy">${fmtDzien(cel)} o ${fmtGodz(cel)}</p>
+      <p class="uwaga">Zajrzyj tu wtedy. Do tego czasu nic nie otwieraj :)</p>
+      <button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button>
+    </main>`;
+  const tik = () => {
+    const ms = cel - Date.now();
+    if (ms <= 0) { stopZegar(); startGry(true, true); return; }
+    const s = Math.floor(ms / 1000);
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sek = s % 60;
+    const el = document.getElementById('zegar');
+    if (el) {
+      el.innerHTML = [[d, d === 1 ? 'dzień' : 'dni'], [dwa(h), 'godz'], [dwa(m), 'min'], [dwa(sek), 'sek']]
+        .map(([v, l]) => `<span class="cyfra"><b>${v}</b><small>${l}</small></span>`).join('');
+    }
+  };
+  tik();
+  zegar = setInterval(tik, 1000);
+}
+
+async function odliczStart() {
+  $app.innerHTML = '<main class="czekanie"><div class="wielka" id="wielka" aria-live="assertive"></div></main>';
+  const el = document.getElementById('wielka');
+  for (const t of ['3', '2', '1', 'Start!']) { el.textContent = t; el.classList.remove('puls'); void el.offsetWidth; el.classList.add('puls'); await czekaj(800); }
+}
+
+async function startGry(przewin = true, poSkanie = false) {
+  stopZegar();
   try {
     await wczytaj();
   } catch (e) {
     console.error(e);
-    $app.innerHTML = `<main class="logowanie"><p class="mala">Paczka nr 0</p><h1>Jeszcze chwila</h1>
+    $app.innerHTML = `<main class="logowanie"><h1>Jeszcze chwila</h1>
       <p>${e && e.message === 'brak-gry' ? 'Gra nie jest jeszcze gotowa. Zajrzyj tu później.' : 'Nie udało się wczytać gry. Sprawdź internet i odśwież stronę.'}</p>
       <button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></main>`;
     return;
   }
+  if (!st.zagadki.some((z) => !z.zablokowana)) {
+    const cel = st.otwarcie(1);
+    if (cel > Date.now()) { widokCzekania(cel); return; }
+  }
+  if (poSkanie) await odliczStart();
   widokGry();
   if (przewin) {
     const cel = st.zagadki.find((z) => !z.zablokowana && !zrobiona(z.nr));
@@ -476,8 +628,7 @@ $app.addEventListener('submit', async (ev) => {
     f.querySelector('button').disabled = true;
     try {
       await api.zaloguj(haslo);
-      $app.innerHTML = '<div class="ladowanie">Chwileczkę…</div>';
-      await startGry();
+      await widokSkanu();
     } catch (e) {
       const c = e && e.code;
       widokLogowania(c === 'auth/too-many-requests' ? 'Za dużo prób. Odczekaj chwilę.'
@@ -521,7 +672,8 @@ $app.addEventListener('click', async (ev) => {
   const b = ev.target.closest('button[data-a]');
   if (!b) return;
   const a = b.dataset.a, nr = Number(b.dataset.nr);
-  if (a === 'wyloguj') { await api.wyloguj(); widokLogowania(); return; }
+  if (a === 'wyloguj') { stopZegar(); zatrzymajKamere(); await api.wyloguj(); widokLogowania(); return; }
+  if (a === 'demo-odliczanie') { widokCzekania(Date.now() + 2 * 86400000 + 3 * 3600000); return; }
   if (a === 'demo-wszystko') { api.otworzWszystko(); await startGry(false); return; }
   if (a === 'demo-czysc') { api.wyczysc(); st.nagrody = {}; st.podpowiedzi = {}; st.wpisane = {}; st.komunikat = {}; await startGry(false); return; }
   if (a === 'podp' || a === 'pomin') { st.pytanie = { nr, co: a }; widokGry(); return; }

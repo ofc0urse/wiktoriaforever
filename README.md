@@ -12,7 +12,7 @@ Strona gry: 15 paczek, 2 zagadki dziennie od 1 listopada, a 8 listopada finał.
 | `firestore.rules` | Firebase (wklejasz) | Kto co może czytać |
 | `zagadki.json` | **TYLKO u Ciebie** | Zagadki i odpowiedzi. Nigdy na GitHuba! |
 
-Bez ustawionego Firebase strona działa w **trybie demo** (hasło: `demo`).
+Bez ustawionego Firebase strona działa w **trybie demo** (z tym samym hasłem co prawdziwa gra).
 
 ## 1. GitHub Pages
 
@@ -26,7 +26,7 @@ Bez ustawionego Firebase strona działa w **trybie demo** (hasło: `demo`).
 1. console.firebase.google.com → **Utwórz projekt** → nazwa np. `zostaw` → Google Analytics wyłącz.
 2. **Authentication → Rozpocznij → E-mail/hasło → Włącz**.
 3. **Authentication → Users → Add user** dwa razy:
-   - `gracz@example.com` + hasło dla niej (min. 6 znaków). To hasło jej podasz.
+   - `gracz@example.com` + hasło, które ona wpisze na stronie. **Nie zapisuj go w żadnym pliku w repozytorium.**
    - `admin@example.com` + Twoje hasło.
 4. **Firestore Database → Utwórz bazę** → lokalizacja `eur3 (europe-west)` → tryb produkcyjny.
 5. **Firestore → Reguły** → usuń wszystko, wklej `firestore.rules` → **Opublikuj**.
@@ -48,6 +48,9 @@ Bez ustawionego Firebase strona działa w **trybie demo** (hasło: `demo`).
 3. W panelu: **Wyczyść postęp**. Ustaw `"start": "2026-11-01"` i wgraj ponownie.
 
 ## Jak to działa
+
+- Start: „Hejj, aby przejść dalej, wpisz hasło” → skan twarzy (przednia kamera, odliczanie 3-2-1, zdjęcie) → odliczanie do pierwszej łamigłówki albo 3-2-1 i gra.
+- Zdjęcie ze skanu widzi tylko ona, na swoim telefonie. Nigdzie nie jest wysyłane ani zapisywane. Gdy kamera nie działa, może zrobić zdjęcie aparatem albo przejść bez skanu.
 
 - Zagadki otwiera **serwer** o ustalonej godzinie (`"godzina": 6` → 6:00 czasu polskiego). Zmiana daty w telefonie nic nie da.
 - Odpowiedzi są zapisane w bazie tylko jako skróty SHA-256. Wielkość liter, spacje i polskie znaki nie mają znaczenia (`grudziadz` = `Grudziądz`).
