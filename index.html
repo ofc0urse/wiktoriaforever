@@ -196,8 +196,16 @@
   .komunikat.jajko { color: var(--zielen-ciemna); }
   .podpis-pole { position: relative; width: 100%; height: 150px; border: 2px dashed #8A807C; border-radius: 12px; background: #fff; }
   .podpis-pole canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; border-radius: 12px; }
-  .podpis-linia { position: absolute; left: 16px; right: 16px; bottom: 34px; border-bottom: 1.5px solid #CFC6BF; color: #8A807C; font-weight: 800; line-height: 1; pointer-events: none; padding-bottom: 2px; }
-  .podpis-start .podpis-pole { max-width: 420px; }
+  .podpis-linia { position: absolute; left: 16px; right: 16px; bottom: 34px; text-align: left; border-bottom: 1.5px solid #CFC6BF; color: #8A807C; font-weight: 800; line-height: 1; pointer-events: none; padding-bottom: 2px; }
+  .podpis-start .podpis-pole, .podpis-start .podpis-narzedzia { max-width: 420px; }
+  .podpis-narzedzia { width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+  .podpis-grupa { display: flex; gap: 6px; align-items: center; }
+  .podpis-narzedzia .kolor { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1.5px #CFC6BF; cursor: pointer; padding: 0; }
+  .podpis-narzedzia .kolor.wybrany { box-shadow: 0 0 0 2.5px var(--tusz); transform: scale(1.08); }
+  .podpis-narzedzia .grubosc { width: 34px; height: 34px; border-radius: 10px; border: 1.5px solid #CFC6BF; background: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .podpis-narzedzia .grubosc span { display: block; border-radius: 50%; background: var(--tusz); }
+  .podpis-narzedzia .grubosc.wybrany { border-color: var(--tusz); border-width: 2.5px; }
+  .podpis-narzedzia .cofnij { min-height: 34px; }
   .karta.odbior { border-style: dashed; border-color: var(--zielen); }
   .kurier { margin: 0; font-family: var(--odr); font-size: 30px; font-weight: 700; line-height: 1.05; color: var(--zielen-ciemna); }
   .odebrano { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--szary); font-weight: 700; }
@@ -665,47 +673,72 @@ async function firebaseApi() {
 
 /* ---------- podpisy ---------- */
 const odebrana = (nr) => !!(st.podpisy && st.podpisy[nr]);
+const KOLORY_PODPISU = [['#2A2422', 'czarny'], ['#1D4E89', 'niebieski'], ['#2F6B3A', 'zielony'], ['#B8324F', 'malinowy'], ['#D98A96', 'pudrowy róż']];
+const GRUBOSCI_PODPISU = [[2, 'cienka'], [3.5, 'średnia'], [6, 'gruba']];
 function polePodpisu(id) {
-  return `<div class="podpis-pole"><canvas data-podpis="${id}" aria-label="Pole na podpis. Podpisz się palcem."></canvas><span class="podpis-linia" aria-hidden="true">x</span></div>`;
+  const kolory = KOLORY_PODPISU.map(([k, n], i) => `<button class="kolor${i === 0 ? ' wybrany' : ''}" type="button" data-a="podpis-kolor" data-id="${id}" data-kolor="${k}" aria-label="Kolor ${n}" style="background:${k}"></button>`).join('');
+  const grubosci = GRUBOSCI_PODPISU.map(([g, n], i) => `<button class="grubosc${i === 1 ? ' wybrany' : ''}" type="button" data-a="podpis-grubosc" data-id="${id}" data-g="${g}" aria-label="Grubość ${n}"><span style="width:${g * 2 + 2}px;height:${g * 2 + 2}px"></span></button>`).join('');
+  return `<div class="podpis-narzedzia" data-narzedzia="${id}">
+      <div class="podpis-grupa">${kolory}</div>
+      <div class="podpis-grupa">${grubosci}</div>
+      <button class="tekstowy cofnij" type="button" data-a="podpis-cofnij" data-id="${id}">Cofnij</button>
+    </div>
+    <div class="podpis-pole"><canvas data-podpis="${id}" aria-label="Pole na podpis. Podpisz się palcem."></canvas><span class="podpis-linia" aria-hidden="true">x</span></div>`;
+}
+function rysujPodpis(c) {
+  const ctx = c.getContext('2d');
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, c.width, c.height); ctx.restore();
+  c._kreski.forEach((k) => {
+    ctx.strokeStyle = k.kolor; ctx.fillStyle = k.kolor; ctx.lineWidth = k.g;
+    if (k.pts.length === 1) { ctx.beginPath(); ctx.arc(k.pts[0][0], k.pts[0][1], k.g / 2, 0, Math.PI * 2); ctx.fill(); return; }
+    ctx.beginPath(); ctx.moveTo(k.pts[0][0], k.pts[0][1]);
+    for (let i = 1; i < k.pts.length; i++) ctx.lineTo(k.pts[i][0], k.pts[i][1]);
+    ctx.stroke();
+  });
 }
 function podepnijPodpisy() {
   document.querySelectorAll('canvas[data-podpis]').forEach((c) => {
     if (c._gotowe) return;
-    c._gotowe = true; c._puste = true;
+    c._gotowe = true; c._kreski = []; c._kolor = KOLORY_PODPISU[0][0]; c._g = GRUBOSCI_PODPISU[1][0];
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     const r = c.getBoundingClientRect();
     c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
     const ctx = c.getContext('2d');
-    ctx.scale(dpr, dpr);
-    ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#2A2422'; ctx.fillStyle = '#2A2422';
-    let rysuje = false, ost = null;
+    ctx.scale(dpr, dpr); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    let kreska = null;
     const pkt = (e) => { const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
     c.addEventListener('pointerdown', (e) => {
-      rysuje = true; ost = pkt(e); c._puste = false;
+      const p = pkt(e);
+      kreska = { kolor: c._kolor, g: c._g, pts: [p] };
+      c._kreski.push(kreska);
       const blad = document.getElementById(`podpis-blad-${c.dataset.podpis}`); if (blad) blad.textContent = '';
       try { c.setPointerCapture(e.pointerId); } catch (er) { /* nic */ }
-      ctx.beginPath(); ctx.arc(ost[0], ost[1], 1.3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = kreska.kolor; ctx.beginPath(); ctx.arc(p[0], p[1], kreska.g / 2, 0, Math.PI * 2); ctx.fill();
       e.preventDefault();
     });
     c.addEventListener('pointermove', (e) => {
-      if (!rysuje) return;
-      const p = pkt(e);
+      if (!kreska) return;
+      const p = pkt(e), ost = kreska.pts[kreska.pts.length - 1];
+      kreska.pts.push(p);
+      ctx.strokeStyle = kreska.kolor; ctx.lineWidth = kreska.g;
       ctx.beginPath(); ctx.moveTo(ost[0], ost[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
-      ost = p; e.preventDefault();
+      e.preventDefault();
     });
-    const koniec = () => { rysuje = false; };
-    c.addEventListener('pointerup', koniec); c.addEventListener('pointercancel', koniec); c.addEventListener('pointerleave', koniec);
+    const koniec = () => { kreska = null; };
+    c.addEventListener('pointerup', koniec); c.addEventListener('pointercancel', koniec);
   });
 }
-function wyczyscPodpis(id) {
-  const c = document.querySelector(`canvas[data-podpis="${id}"]`);
-  if (!c) return;
-  c.getContext('2d').clearRect(0, 0, c.width, c.height);
-  c._puste = true;
+const plotnoPodpisu = (id) => document.querySelector(`canvas[data-podpis="${id}"]`);
+function wyczyscPodpis(id) { const c = plotnoPodpisu(id); if (!c) return; c._kreski = []; rysujPodpis(c); }
+function cofnijPodpis(id) { const c = plotnoPodpisu(id); if (!c || !c._kreski.length) return; c._kreski.pop(); rysujPodpis(c); }
+function ustawPodpis(btn, co) {
+  const c = plotnoPodpisu(btn.dataset.id); if (!c) return;
+  if (co === 'kolor') c._kolor = btn.dataset.kolor; else c._g = Number(btn.dataset.g);
+  btn.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('wybrany', x === btn));
 }
 function obrazPodpisu(id) {
-  const c = document.querySelector(`canvas[data-podpis="${id}"]`);
-  if (!c || c._puste) return null;
+  const c = plotnoPodpisu(id);
+  if (!c || !c._kreski || !c._kreski.length) return null;
   const m = document.createElement('canvas');
   m.width = 420; m.height = Math.round(420 * c.height / c.width);
   m.getContext('2d').drawImage(c, 0, 0, m.width, m.height);
@@ -1233,8 +1266,11 @@ $app.addEventListener('submit', async (ev) => {
       if (podpisy.start) await startGry(true); else widokPodpisuStart();
     } catch (e) {
       const c = e && e.code;
+      const zleHaslo = ['auth/invalid-credential', 'auth/wrong-password', 'auth/invalid-login-credentials', 'auth/user-not-found'].includes(c);
+      if (!zleHaslo) console.warn('logowanie:', e);
       widokLogowania(c === 'auth/too-many-requests' ? 'Za dużo prób. Odczekaj chwilę.'
-        : (c === 'auth/network-request-failed' ? 'Brak internetu?' : 'To nie to hasło.'));
+        : (c === 'auth/network-request-failed' ? 'Brak internetu?'
+          : (zleHaslo ? 'To nie to hasło.' : `Nie udało się zalogować (${c || (e && e.message) || 'nieznany błąd'}).`)));
     }
     return;
   }
@@ -1297,15 +1333,23 @@ $app.addEventListener('click', async (ev) => {
   const b = ev.target.closest('button[data-a]');
   if (!b) return;
   const a = b.dataset.a, nr = Number(b.dataset.nr);
-  if (a === 'wyloguj') { stopZegar(); zatrzymajKamere(); await api.wyloguj(); widokLogowania(); return; }
+  if (a === 'wyloguj') {
+    stopZegar(); zatrzymajKamere(); await api.wyloguj();
+    st.strych = false; strychDane = null; strychObietnica = null; document.body.classList.remove('na-strychu');
+    try { localStorage.removeItem('zostaw-strych'); } catch (e) { /* nic */ }
+    widokLogowania(); return;
+  }
   if (a === 'strych') { wejdzNaStrych(); return; }
   if (a === 'podpis-czysc') { wyczyscPodpis(b.dataset.id); return; }
+  if (a === 'podpis-cofnij') { cofnijPodpis(b.dataset.id); return; }
+  if (a === 'podpis-kolor') { ustawPodpis(b, 'kolor'); return; }
+  if (a === 'podpis-grubosc') { ustawPodpis(b, 'g'); return; }
   if (a === 'podpis-start') { await podpiszStart(b); return; }
   if (a === 'podpis-paczka') { await odbierzPaczke(Number(b.dataset.nr), b); return; }
   if (a === 'ze-strychu') { zejdzZeStrychu(); return; }
   if (a === 'demo-odliczanie') { widokCzekania(Date.now() + 2 * 86400000 + 3 * 3600000); return; }
   if (a === 'demo-wszystko') { api.otworzWszystko(); await startGry(false); return; }
-  if (a === 'demo-czysc') { api.wyczysc(); st.nagrody = {}; st.podpowiedzi = {}; st.wpisane = {}; st.komunikat = {}; await startGry(false); return; }
+  if (a === 'demo-czysc') { st.strych = false; try { localStorage.removeItem('zostaw-strych'); } catch (e) { /* nic */ } api.wyczysc(); st.nagrody = {}; st.podpowiedzi = {}; st.wpisane = {}; st.komunikat = {}; await startGry(false); return; }
   if (a === 'podp' || a === 'pomin') { st.pytanie = { nr, co: a }; widokGry(); return; }
   if (a === 'nie') { st.pytanie = null; widokGry(); return; }
   if (a === 'tak' && st.pytanie && !st.zajete) {
