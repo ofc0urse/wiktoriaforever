@@ -194,6 +194,34 @@
   }
   @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 12px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
   .komunikat.jajko { color: var(--zielen-ciemna); }
+  /* Strych */
+  body.na-strychu { background: #241C19; color: #F3E6D3; }
+  .na-strychu .mala { color: #D9A55B; }
+  .strych { position: relative; display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
+  .strych h1 { color: #F3E6D3; font-size: 64px; }
+  .strych-wstep { margin: 0; color: #CDBBA4; }
+  .pajeczyna { position: absolute; top: -20px; right: -10px; width: 110px; height: 110px; color: rgba(243, 230, 211, 0.22); transform: scaleX(-1); pointer-events: none; }
+  .skrzynie { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+  .skrzynia {
+    padding: 16px; border-radius: 16px; background: #33281F; border: 2px solid #5A4634;
+    box-shadow: inset 0 0 0 4px #2B211A, 0 10px 24px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; gap: 12px;
+  }
+  .skrzynia h3 { color: #F2D29B; font-size: 20px; }
+  .skrzynia .tresc { color: #F3E6D3; }
+  .film { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
+  .film.pion { aspect-ratio: 9 / 16; max-width: 340px; align-self: center; }
+  .film iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .strych-link, .strych-wyjscie, .strych-wejscie { align-self: flex-start; display: inline-flex; align-items: center; text-decoration: none; }
+  .strych-wyjscie { margin-top: 18px; background: #5A4634; border-color: #5A4634; }
+  .strych-wejscie { background: #33281F; border-color: #33281F; height: 44px; }
+  .strych-wejscie:hover { background: #241C19; }
+  .strych-pusto { color: #CDBBA4; font-style: italic; }
+  .strych-ladowanie { color: #CDBBA4; }
+  .pyl { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .pylek { position: absolute; bottom: -10px; width: 4px; height: 4px; border-radius: 50%; background: rgba(243, 214, 160, 0.55); animation: pylek linear infinite; }
+  @keyframes pylek { from { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } to { transform: translate(30px, -105vh); opacity: 0; } }
+  .strych, .na-strychu .strona { position: relative; z-index: 1; }
+  @media (prefers-reduced-motion: reduce) { .pylek { display: none; } }
   .klodka { flex: none; width: 44px; height: 44px; margin: -8px 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: inherit; cursor: pointer; border-radius: 10px; }
   .klodka:active svg { transform: rotate(-12deg); }
   .deszcz.ciasto { width: 40px; height: 40px; }
@@ -445,6 +473,12 @@ function demoApi() {
     },
     async nagroda(nr) { const x = z(nr); return { wiadomosc: x.wiadomosc || '', litera: x.litera || '' }; },
     async zapiszZdjecie() { /* demo: nigdzie nie wysyłamy */ },
+    async strych() {
+      return [
+        { tytul: 'Przykładowy napis', rodzaj: 'tekst', tresc: 'Tu będą Twoje napisy.\nDodajesz je w panelu admina, w sekcji Strych.' },
+        { tytul: 'Przykładowy film', rodzaj: 'film', tresc: 'Film z YouTube (niepubliczny) albo z Dysku Google.', link: 'https://www.youtube.com/watch?v=QDia3e12czc' }
+      ];
+    },
     otworzWszystko() { pam.wszystko = true; zapisz(); },
     wyczysc() { pam = { zalogowany: true, wszystko: pam.wszystko, rozwiazane: [], podpowiedzi: [], pominiete: [] }; zapisz(); }
   };
@@ -521,6 +555,10 @@ async function firebaseApi() {
     async nagroda(nr) {
       const s = await F.getDoc(F.doc(db, 'nagrody', nrId(nr)));
       return s.exists() ? s.data() : {};
+    },
+    async strych() {
+      const s = await F.getDocs(F.query(F.collection(db, 'strych'), F.orderBy('kolejnosc')));
+      return s.docs.map((d) => d.data());
     }
   };
 }
@@ -528,6 +566,55 @@ async function firebaseApi() {
 /* ---------- stan i widok ---------- */
 let api;
 const st = { otwarcie: null, zagadki: [], postep: null, nagrody: {}, podpowiedzi: {}, wpisane: {}, pytanie: null, zajete: null, komunikat: {}, blad: '' };
+try { st.strych = localStorage.getItem('zostaw-strych') === '1'; } catch (e) { st.strych = false; }
+
+/* ---------- Strych: tajna strona ---------- */
+function osadzFilm(link) {
+  let u;
+  try { u = new URL(link); } catch (e) { return ''; }
+  if (u.protocol !== 'https:') return '';
+  let yt = null, pion = false;
+  if (u.hostname === 'youtu.be') yt = u.pathname.slice(1);
+  else if (/(^|\.)youtube\.com$/.test(u.hostname)) {
+    if (u.pathname.startsWith('/shorts/')) { yt = u.pathname.split('/')[2]; pion = true; } else yt = u.searchParams.get('v');
+  }
+  if (yt && /^[\w-]{6,20}$/.test(yt)) {
+    return `<div class="film${pion ? ' pion' : ''}"><iframe src="https://www.youtube-nocookie.com/embed/${yt}" title="Film" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
+  }
+  const dysk = u.hostname === 'drive.google.com' && u.pathname.match(/\/file\/d\/([\w-]+)/);
+  if (dysk) return `<div class="film"><iframe src="https://drive.google.com/file/d/${dysk[1]}/preview" title="Film" loading="lazy" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`;
+  return `<a class="przycisk strych-link" href="${esc(u.href)}" target="_blank" rel="noopener">Otwórz</a>`;
+}
+
+async function widokStrychu() {
+  document.body.classList.add('na-strychu');
+  $app.innerHTML = '<div class="ladowanie strych-ladowanie">Wchodzę po schodach…</div>';
+  let lista = [];
+  try { lista = await api.strych(); } catch (e) { console.warn(e); }
+  const pyl = Array.from({ length: 14 }, () => `<span class="pylek" style="left:${Math.random() * 100}%;animation-delay:${(Math.random() * 8).toFixed(1)}s;animation-duration:${(7 + Math.random() * 6).toFixed(1)}s"></span>`).join('');
+  const karty = lista.length ? lista.map((x) => `
+      <article class="skrzynia">
+        ${x.tytul ? `<h3>${esc(x.tytul)}</h3>` : ''}
+        ${x.tresc ? `<p class="tresc">${esc(x.tresc)}</p>` : ''}
+        ${x.rodzaj === 'film' && x.link ? osadzFilm(x.link) : ''}
+      </article>`).join('') : '<p class="strych-pusto">Na razie pusto. Ktoś jeszcze nie zdążył tu niczego schować :)</p>';
+  $app.innerHTML = `
+    <div class="pyl" aria-hidden="true">${pyl}</div>
+    <main class="strych">
+      <svg class="pajeczyna" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path d="M0 0L100 100M0 0L100 40M0 0L40 100M0 0L100 0M0 0L0 100"/><path d="M0 20Q14 14 20 0M0 40Q28 28 40 0M0 62Q44 44 62 0M0 84Q60 60 84 0"/></g></svg>
+      <p class="mala">psst…</p>
+      <h1>Strych</h1>
+      <p class="strych-wstep">Znalazłaś tajne miejsce. Tu trzymam rzeczy tylko dla Ciebie.</p>
+      <div class="skrzynie">${karty}</div>
+      <button class="przycisk strych-wyjscie" type="button" data-a="ze-strychu">Zejdź na dół</button>
+    </main>`;
+  window.scrollTo(0, 0);
+}
+function zejdzZeStrychu() {
+  document.body.classList.remove('na-strychu');
+  widokGry();
+  window.scrollTo(0, 0);
+}
 
 const zrobiona = (nr) => st.postep.rozwiazane.includes(nr) || st.postep.pominiete.includes(nr);
 const zostaloPodp = () => LIMIT - st.postep.podpowiedzi.length;
@@ -657,6 +744,7 @@ function widokGry() {
         <div class="licznik"><span>Podpowiedzi</span>${kropki(st.postep.podpowiedzi.length)}</div>
         <div class="licznik"><span>Pominięcia</span>${kropki(st.postep.pominiete.length)}</div>
       </div>
+      ${st.strych ? '<button class="przycisk strych-wejscie" type="button" data-a="strych">Wejdź na strych</button>' : ''}
       <div class="litery"><span class="etykieta">Litery do finału</span><div class="litery-rzad" style="grid-template-columns: repeat(${ileLiter}, minmax(0, 1fr))">${litery.join('')}</div></div>
       ${nastepna ? `<p class="nastepna" id="nastepna">Następne zagadki: <b>${fmtDzien(nastepna.t)} o ${fmtGodz(nastepna.t)}</b> (${zaIle(nastepna.t)})</p>` : ''}
     </header>
@@ -853,6 +941,12 @@ $app.addEventListener('submit', async (ev) => {
   st.wpisane[nr] = odp;
   if (!S.normalizuj(odp)) { st.komunikat[nr] = { zle: true, tekst: 'Najpierw coś wpisz.' }; widokGry(); return; }
   // Rickroll: otwieramy od razu (jeszcze w kliknięciu), żeby telefon nie zablokował nowej karty.
+  if (S.normalizuj(odp) === 'STRYCH') {
+    st.strych = true; st.wpisane[nr] = '';
+    try { localStorage.setItem('zostaw-strych', '1'); } catch (e) { /* trudno, wpisze jeszcze raz */ }
+    widokStrychu();
+    return;
+  }
   if (RICKROLL.includes(S.normalizuj(odp))) {
     const okno = window.open(RICK_URL, '_blank', 'noopener');
     st.komunikat[nr] = { jajko: true, tekst: okno ? 'Never gonna give you up :)' : 'Never gonna give you up :) (telefon zablokował nową kartę)' };
@@ -901,6 +995,8 @@ $app.addEventListener('click', async (ev) => {
   if (!b) return;
   const a = b.dataset.a, nr = Number(b.dataset.nr);
   if (a === 'wyloguj') { stopZegar(); zatrzymajKamere(); await api.wyloguj(); widokLogowania(); return; }
+  if (a === 'strych') { widokStrychu(); return; }
+  if (a === 'ze-strychu') { zejdzZeStrychu(); return; }
   if (a === 'demo-odliczanie') { widokCzekania(Date.now() + 2 * 86400000 + 3 * 3600000); return; }
   if (a === 'demo-wszystko') { api.otworzWszystko(); await startGry(false); return; }
   if (a === 'demo-czysc') { api.wyczysc(); st.nagrody = {}; st.podpowiedzi = {}; st.wpisane = {}; st.komunikat = {}; await startGry(false); return; }
@@ -930,7 +1026,10 @@ setInterval(async () => {
   if (!st.postep || !st.otwarcie || st.zajete) return;
   const zamkniete = st.zagadki.filter((z) => z.zablokowana);
   if (zamkniete.some((z) => Date.now() >= st.otwarcie(S.dzienPaczki(z.nr)))) {
-    try { st.zagadki = await api.zagadki(); widokGry(); } catch (e) { /* spróbuje znowu */ }
+    try {
+      st.zagadki = await api.zagadki();
+      if (!document.body.classList.contains('na-strychu')) widokGry();
+    } catch (e) { /* spróbuje znowu */ }
   } else {
     const el = document.getElementById('nastepna');
     if (el) {

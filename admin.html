@@ -88,6 +88,26 @@
     <div id="raport"></div>
   </section>
 
+  <section class="blok" aria-labelledby="h-strych">
+    <h2 id="h-strych">Strych (tajna strona)</h2>
+    <p class="info">Otwiera się, gdy ona wpisze <b>strych</b> w dowolne pole odpowiedzi. Filmik wrzuć na YouTube jako <b>Niepubliczny</b> albo na Dysk Google (Udostępnij → „Każda osoba mająca link”) i wklej link. Same napisy też mogą być.</p>
+    <div class="wiersz">
+      <label for="st-tytul">Tytuł</label><input class="pole" id="st-tytul" style="flex:1 1 220px">
+      <label for="st-kol">Kolejność</label><input class="pole" id="st-kol" type="number" value="1" style="width:80px">
+    </div>
+    <label for="st-tresc">Napis</label>
+    <textarea class="pole" id="st-tresc" placeholder="Co chcesz jej napisać (może być puste przy filmiku)"></textarea>
+    <div class="wiersz">
+      <label for="st-link">Link do filmiku (opcjonalnie)</label><input class="pole" id="st-link" type="url" placeholder="https://youtu.be/..." style="flex:1 1 260px">
+    </div>
+    <div class="wiersz">
+      <button class="przycisk" type="button" id="st-dodaj" disabled>Dodaj na strych</button>
+      <button class="przycisk drugi" type="button" id="st-pokaz" disabled>Pokaż, co jest na strychu</button>
+    </div>
+    <p id="st-info" aria-live="polite"></p>
+    <div id="st-lista"></div>
+  </section>
+
   <section class="blok" aria-labelledby="h-zdj">
     <h2 id="h-zdj">Zdjęcia ze skanu twarzy</h2>
     <div class="wiersz"><button class="przycisk drugi" type="button" id="zdj-pokaz" disabled>Pokaż zdjęcia</button></div>
@@ -221,7 +241,39 @@ function odswiezPrzyciski() {
   $('postep-odswiez').disabled = !admin;
   $('postep-czysc').disabled = !admin;
   $('zdj-pokaz').disabled = !admin;
+  $('st-dodaj').disabled = !admin;
+  $('st-pokaz').disabled = !admin;
 }
+
+/* ---------- Strych ---------- */
+$('st-dodaj').onclick = async () => {
+  const tytul = $('st-tytul').value.trim(), tresc = $('st-tresc').value.trim(), link = $('st-link').value.trim();
+  if (!tytul && !tresc && !link) { $('st-info').innerHTML = '<span class="zle">Wpisz chociaż tytuł, napis albo link.</span>'; return; }
+  if (link && !/^https:\/\//.test(link)) { $('st-info').innerHTML = '<span class="zle">Link musi zaczynać się od https://</span>'; return; }
+  try {
+    await F.addDoc(F.collection(db, 'strych'), { tytul, tresc, link, rodzaj: link ? 'film' : 'tekst', kolejnosc: Number($('st-kol').value) || 0 });
+    $('st-info').innerHTML = '<span class="ok">Dodane na strych.</span>';
+    $('st-tytul').value = ''; $('st-tresc').value = ''; $('st-link').value = ''; $('st-kol').value = String((Number($('st-kol').value) || 0) + 1);
+    pokazStrych();
+  } catch (e) { $('st-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}. Czy wkleiłeś nowe reguły?</span>`; }
+};
+async function pokazStrych() {
+  try {
+    const s = await F.getDocs(F.query(F.collection(db, 'strych'), F.orderBy('kolejnosc')));
+    if (s.empty) { $('st-lista').innerHTML = '<p class="info">Strych jest pusty.</p>'; return; }
+    $('st-lista').innerHTML = `<div class="tabela"><table><thead><tr><th>Kol.</th><th>Tytuł</th><th>Napis</th><th>Link</th><th></th></tr></thead><tbody>${
+      s.docs.map((d) => { const x = d.data(); return `<tr><td>${esc(x.kolejnosc)}</td><td>${esc(x.tytul)}</td><td>${esc((x.tresc || '').slice(0, 80))}</td><td>${x.link ? `<a href="${esc(x.link)}" target="_blank" rel="noopener">link</a>` : ''}</td><td><button class="przycisk grozny" type="button" data-usun="${esc(d.id)}">Usuń</button></td></tr>`; }).join('')
+    }</tbody></table></div>`;
+  } catch (e) { $('st-lista').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}</p>`; }
+}
+$('st-pokaz').onclick = pokazStrych;
+$('st-lista').addEventListener('click', async (ev) => {
+  const b = ev.target.closest('[data-usun]');
+  if (!b) return;
+  if (b.dataset.pewne !== '1') { b.dataset.pewne = '1'; b.textContent = 'Na pewno?'; return; }
+  try { await F.deleteDoc(F.doc(db, 'strych', b.dataset.usun)); pokazStrych(); }
+  catch (e) { $('st-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}</span>`; }
+});
 
 /* ---------- Zdjęcia ---------- */
 $('zdj-pokaz').onclick = async () => {

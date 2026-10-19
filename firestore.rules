@@ -59,6 +59,12 @@ service cloud.firestore {
       allow read, delete: if admin();
     }
 
+    // Strych: tajna strona z Twoimi filmikami i napisami.
+    match /strych/{id} {
+      allow read: if gracz() || admin();
+      allow write: if admin();
+    }
+
     match /postep/{uid} {
       allow read: if admin() || (gracz() && request.auth.uid == uid);
       allow create: if gracz() && request.auth.uid == uid && poprawnyPostep(request.resource.data);

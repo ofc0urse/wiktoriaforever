@@ -57,3 +57,4 @@ Bez ustawionego Firebase strona działa w **trybie demo** (z tym samym hasłem c
 - Podpowiedzi i pominięcia: po 3 na całą grę. Limit pilnuje serwer. Pominięcie też otwiera paczkę i daje literę.
 - Litery dni 1–7 układają się w hasło finału (paczka 15).
 - Jeśli zmienisz e-maile kont, zmień je w `config.js` **i** w `firestore.rules`.
+- **Strych:** gdy wpisze `strych` w dowolne pole odpowiedzi, otwiera się tajna strona (ciemna, z pajęczyną). Później ma na górze przycisk „Wejdź na strych”. Treści dodajesz w `admin.html` → **Strych**: napisy i linki do filmików (YouTube „Niepubliczny” albo Dysk Google „każda osoba z linkiem”).
