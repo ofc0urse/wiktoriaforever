@@ -194,6 +194,14 @@
   }
   @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 12px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
   .komunikat.jajko { color: var(--zielen-ciemna); }
+  .podpis-pole { position: relative; width: 100%; height: 150px; border: 2px dashed #8A807C; border-radius: 12px; background: #fff; }
+  .podpis-pole canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; border-radius: 12px; }
+  .podpis-linia { position: absolute; left: 16px; right: 16px; bottom: 34px; border-bottom: 1.5px solid #CFC6BF; color: #8A807C; font-weight: 800; line-height: 1; pointer-events: none; padding-bottom: 2px; }
+  .podpis-start .podpis-pole { max-width: 420px; }
+  .karta.odbior { border-style: dashed; border-color: var(--zielen); }
+  .kurier { margin: 0; font-family: var(--odr); font-size: 30px; font-weight: 700; line-height: 1.05; color: var(--zielen-ciemna); }
+  .odebrano { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--szary); font-weight: 700; }
+  .odebrano img { height: 44px; width: auto; opacity: 0.85; }
   /* Strych */
   body.na-strychu { background: #241C19; color: #F3E6D3; }
   .na-strychu .mala { color: #D9A55B; }
@@ -544,6 +552,8 @@ function demoApi() {
     },
     async nagroda(nr) { const x = z(nr); return { wiadomosc: x.wiadomosc || '', litera: x.litera || '' }; },
     async zapiszZdjecie() { /* demo: nigdzie nie wysyłamy */ },
+    async podpisy() { return { ...(pam.podpisy || {}) }; },
+    async zapiszPodpis(id, obraz) { pam.podpisy = { ...(pam.podpisy || {}), [id]: obraz }; zapisz(); },
     async strych() {
       return [
         { tytul: 'Przykładowy napis', rodzaj: 'tekst', tresc: 'Tu będą Twoje napisy.\nDodajesz je w panelu admina, w sekcji Strych.' },
@@ -552,7 +562,7 @@ function demoApi() {
       ];
     },
     otworzWszystko() { pam.wszystko = true; zapisz(); },
-    wyczysc() { pam = { zalogowany: true, wszystko: pam.wszystko, rozwiazane: [], podpowiedzi: [], pominiete: [] }; zapisz(); }
+    wyczysc() { pam = { zalogowany: true, wszystko: pam.wszystko, rozwiazane: [], podpowiedzi: [], pominiete: [], podpisy: pam.podpisy && pam.podpisy.start ? { start: pam.podpisy.start } : {} }; zapisz(); }
   };
 }
 
@@ -578,6 +588,15 @@ async function firebaseApi() {
     // Firebase wymaga min. 6 znaków, więc do wpisanego hasła doklejamy stałą końcówkę.
     async zaloguj(haslo) { await A.signInWithEmailAndPassword(auth, CFG.graczEmail, hasloFirebase(haslo)); },
     async zapiszZdjecie(obraz) { await F.addDoc(F.collection(db, 'zdjecia'), { obraz, kiedy: F.serverTimestamp() }); },
+    async podpisy() {
+      const s = await F.getDocs(F.collection(db, 'podpisy'));
+      const o = {};
+      s.docs.forEach((d) => { o[d.id === 'start' ? 'start' : Number(d.id)] = d.data().obraz; });
+      return o;
+    },
+    async zapiszPodpis(id, obraz) {
+      await F.setDoc(F.doc(db, 'podpisy', id === 'start' ? 'start' : nrId(id)), { obraz, kiedy: F.serverTimestamp() });
+    },
     async wyloguj() { await A.signOut(auth); },
     async harmonogram() {
       const s = await F.getDoc(F.doc(db, 'ustawienia', 'gra'));
@@ -644,9 +663,91 @@ async function firebaseApi() {
   };
 }
 
+/* ---------- podpisy ---------- */
+const odebrana = (nr) => !!(st.podpisy && st.podpisy[nr]);
+function polePodpisu(id) {
+  return `<div class="podpis-pole"><canvas data-podpis="${id}" aria-label="Pole na podpis. Podpisz się palcem."></canvas><span class="podpis-linia" aria-hidden="true">x</span></div>`;
+}
+function podepnijPodpisy() {
+  document.querySelectorAll('canvas[data-podpis]').forEach((c) => {
+    if (c._gotowe) return;
+    c._gotowe = true; c._puste = true;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const r = c.getBoundingClientRect();
+    c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+    const ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#2A2422'; ctx.fillStyle = '#2A2422';
+    let rysuje = false, ost = null;
+    const pkt = (e) => { const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+    c.addEventListener('pointerdown', (e) => {
+      rysuje = true; ost = pkt(e); c._puste = false;
+      const blad = document.getElementById(`podpis-blad-${c.dataset.podpis}`); if (blad) blad.textContent = '';
+      try { c.setPointerCapture(e.pointerId); } catch (er) { /* nic */ }
+      ctx.beginPath(); ctx.arc(ost[0], ost[1], 1.3, 0, Math.PI * 2); ctx.fill();
+      e.preventDefault();
+    });
+    c.addEventListener('pointermove', (e) => {
+      if (!rysuje) return;
+      const p = pkt(e);
+      ctx.beginPath(); ctx.moveTo(ost[0], ost[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
+      ost = p; e.preventDefault();
+    });
+    const koniec = () => { rysuje = false; };
+    c.addEventListener('pointerup', koniec); c.addEventListener('pointercancel', koniec); c.addEventListener('pointerleave', koniec);
+  });
+}
+function wyczyscPodpis(id) {
+  const c = document.querySelector(`canvas[data-podpis="${id}"]`);
+  if (!c) return;
+  c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  c._puste = true;
+}
+function obrazPodpisu(id) {
+  const c = document.querySelector(`canvas[data-podpis="${id}"]`);
+  if (!c || c._puste) return null;
+  const m = document.createElement('canvas');
+  m.width = 420; m.height = Math.round(420 * c.height / c.width);
+  m.getContext('2d').drawImage(c, 0, 0, m.width, m.height);
+  return m.toDataURL('image/png');
+}
+
+function widokPodpisuStart() {
+  $app.innerHTML = `
+    <main class="skan podpis-start">
+      <h1>Najpierw podpis</h1>
+      <p>To Twój pierwszy raz tutaj, więc podpisz się palcem poniżej :)</p>
+      ${polePodpisu('start')}
+      <div class="skan-akcje">
+        <button class="przycisk" type="button" data-a="podpis-start">Podpisuję</button>
+        <button class="tekstowy" type="button" data-a="podpis-czysc" data-id="start">Wyczyść</button>
+      </div>
+      <p class="komunikat zle" id="podpis-blad-start" aria-live="polite"></p>
+    </main>`;
+  podepnijPodpisy();
+}
+async function podpiszStart(btn) {
+  const obraz = obrazPodpisu('start');
+  if (!obraz) { document.getElementById('podpis-blad-start').textContent = 'Najpierw się podpisz :)'; return; }
+  btn.disabled = true;
+  try { await api.zapiszPodpis('start', obraz); } catch (e) { console.warn('podpis:', e); }
+  await widokSkanu();
+}
+async function odbierzPaczke(nr, btn) {
+  const obraz = obrazPodpisu(String(nr));
+  if (!obraz) { const el = document.getElementById(`podpis-blad-${nr}`); if (el) el.textContent = 'Najpierw się podpisz :)'; return; }
+  btn.disabled = true;
+  try { await api.zapiszPodpis(nr, obraz); } catch (e) { console.warn('podpis:', e); }
+  st.podpisy = { ...(st.podpisy || {}), [nr]: obraz };
+  st.swieza = nr;
+  st.nowaLiteraNr = st.nagrody[nr] && st.nagrody[nr].litera ? nr : null;
+  widokGry();
+  if (nr === LICZBA) deszczSerc(40);
+}
+
 /* ---------- stan i widok ---------- */
 let api;
-const st = { otwarcie: null, zagadki: [], postep: null, nagrody: {}, podpowiedzi: {}, wpisane: {}, pytanie: null, zajete: null, komunikat: {}, blad: '' };
+const st = { otwarcie: null, zagadki: [], postep: null, podpisy: {}, nagrody: {}, podpowiedzi: {}, wpisane: {}, pytanie: null, zajete: null, komunikat: {}, blad: '' };
 try { st.strych = localStorage.getItem('zostaw-strych') === '1'; } catch (e) { st.strych = false; }
 
 /* ---------- Strych: tajna strona ---------- */
@@ -778,6 +879,7 @@ async function schody(kierunek, potem) {
 
 /* ---------- animacje po narysowaniu widoku ---------- */
 function poRenderze() {
+  podepnijPodpisy();
   if (!st.bylRender) { st.bylRender = true; animujWejscie(); }
   if (st.swieza) { document.getElementById(`z${st.swieza}`)?.classList.add('swieza'); st.swieza = null; }
   st.nowaLiteraNr = null; st.nowaPodp = null;
@@ -864,6 +966,19 @@ function kartaOtwarta(z) {
 
 function kartaZrobiona(z) {
   const nr = z.nr;
+  if (!odebrana(nr)) {
+    const pomTxt = st.postep.rozwiazane.includes(nr) ? 'Rozwiązana' : 'Pominięta';
+    return `
+    <article class="karta odbior" id="z${nr}">
+      <div class="karta-gora"><span class="paczka">Paczka ${nr}</span><span class="znacznik">${SVG_OK}${pomTxt}</span></div>
+      <p class="kurier">Paczka nr ${nr} czeka na odbiór.</p>
+      <p class="uwaga">Podpisz się palcem, żeby ją odebrać:</p>
+      ${polePodpisu(String(nr))}
+      <div class="akcje"><button class="tekstowy" type="button" data-a="podpis-czysc" data-id="${nr}">Wyczyść</button>
+      <button class="przycisk" type="button" data-a="podpis-paczka" data-nr="${nr}"${st.zajete === nr ? ' disabled' : ''}>Odbieram</button></div>
+      <p class="komunikat zle" id="podpis-blad-${nr}" aria-live="polite"></p>
+    </article>`;
+  }
   const n = st.nagrody[nr] || {};
   const pom = !st.postep.rozwiazane.includes(nr);
   const final = nr === LICZBA;
@@ -873,6 +988,7 @@ function kartaZrobiona(z) {
       <p class="otworz">Otwórz paczkę nr ${nr}</p>
       ${n.wiadomosc ? `<p class="wiadomosc">${esc(n.wiadomosc)}</p>` : ''}
       ${n.litera ? `<p class="dostales"><span class="litera jest">${esc(n.litera)}</span>Litera dnia. Wpisz ją też na karcie.</p>` : ''}
+      ${typeof st.podpisy[nr] === 'string' && st.podpisy[nr].startsWith('data:image/png') ? `<p class="odebrano"><span>Odebrano, podpis:</span><img src="${st.podpisy[nr]}" alt="Twój podpis"></p>` : ''}
       ${z.tresc || z.kod ? `<details><summary>Pokaż zagadkę</summary>${z.tresc ? `<p class="tresc">${esc(z.tresc)}</p>` : ''}${z.kod ? `<div class="kod">${esc(z.kod)}</div>` : ''}</details>` : ''}
     </article>`;
 }
@@ -883,7 +999,7 @@ function widokGry() {
   st.zagadki.forEach((z) => { (zaDni[S.dzienPaczki(z.nr)] ||= []).push(z); });
 
   // litery do finału, w kolejności paczek
-  const zebraneNr = Object.keys(st.nagrody).map(Number).sort((a, b) => a - b).filter((nr) => (st.nagrody[nr] || {}).litera);
+  const zebraneNr = Object.keys(st.nagrody).map(Number).sort((a, b) => a - b).filter((nr) => (st.nagrody[nr] || {}).litera && odebrana(nr));
   const zebrane = zebraneNr.map((nr) => st.nagrody[nr].litera);
   const ileLiter = Math.max(st.liczbaLiter || 7, zebrane.length);
   const litery = [];
@@ -942,6 +1058,7 @@ async function wczytaj() {
   const h = await api.harmonogram();
   const [z, p] = await Promise.all([api.zagadki(), api.postep()]);
   st.otwarcie = h.otwarcie; st.liczbaLiter = h.liczbaLiter; st.zagadki = z; st.postep = p;
+  try { st.podpisy = await api.podpisy(); } catch (e) { console.warn('podpisy:', e); st.podpisy = st.podpisy || {}; }
   const zrob = [...p.rozwiazane, ...p.pominiete].filter((nr) => !st.nagrody[nr]);
   await Promise.all(zrob.map(async (nr) => { st.nagrody[nr] = await api.nagroda(nr); }));
   const otwarteNr = z.filter((x) => !x.zablokowana).map((x) => x.nr);
@@ -1084,7 +1201,6 @@ async function startGry(przewin = true, poSkanie = false) {
     const cel = st.otwarcie(1);
     if (cel > Date.now()) { widokCzekania(cel); return; }
   }
-  if (poSkanie) await odliczStart();
   widokGry();
   sprawdzNoc();
   if (st.strych) pobierzStrych();
@@ -1101,7 +1217,6 @@ async function poZrobieniu(nr) {
   st.nagrody[nr] = await api.nagroda(nr);
   st.postep = await api.postep();
   st.swieza = nr;
-  st.nowaLiteraNr = st.nagrody[nr] && st.nagrody[nr].litera ? nr : null;
 }
 
 $app.addEventListener('submit', async (ev) => {
@@ -1113,7 +1228,9 @@ $app.addEventListener('submit', async (ev) => {
     f.querySelector('button').disabled = true;
     try {
       await api.zaloguj(haslo);
-      await widokSkanu();
+      let podpisy = {};
+      try { podpisy = await api.podpisy(); } catch (e) { console.warn('podpisy:', e); }
+      if (podpisy.start) await startGry(true); else widokPodpisuStart();
     } catch (e) {
       const c = e && e.code;
       widokLogowania(c === 'auth/too-many-requests' ? 'Za dużo prób. Odczekaj chwilę.'
@@ -1148,7 +1265,6 @@ $app.addEventListener('submit', async (ev) => {
       await poZrobieniu(nr);
       st.zajete = null; widokGry();
       document.getElementById(`z${nr}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      if (nr === LICZBA) deszczSerc(40);
     } else {
       st.zajete = null;
       const jajko = JAJKA[S.normalizuj(odp)];
@@ -1183,6 +1299,9 @@ $app.addEventListener('click', async (ev) => {
   const a = b.dataset.a, nr = Number(b.dataset.nr);
   if (a === 'wyloguj') { stopZegar(); zatrzymajKamere(); await api.wyloguj(); widokLogowania(); return; }
   if (a === 'strych') { wejdzNaStrych(); return; }
+  if (a === 'podpis-czysc') { wyczyscPodpis(b.dataset.id); return; }
+  if (a === 'podpis-start') { await podpiszStart(b); return; }
+  if (a === 'podpis-paczka') { await odbierzPaczke(Number(b.dataset.nr), b); return; }
   if (a === 'ze-strychu') { zejdzZeStrychu(); return; }
   if (a === 'demo-odliczanie') { widokCzekania(Date.now() + 2 * 86400000 + 3 * 3600000); return; }
   if (a === 'demo-wszystko') { api.otworzWszystko(); await startGry(false); return; }

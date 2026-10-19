@@ -67,6 +67,19 @@ service cloud.firestore {
       allow write: if admin();
     }
 
+    // Podpisy: przy pierwszym logowaniu ('start') i przy odbiorze każdej paczki ('01'…'15').
+    // Raz złożonego podpisu nie da się zmienić.
+    match /podpisy/{id} {
+      allow read: if gracz() || admin();
+      allow create: if gracz()
+        && request.resource.data.keys().hasOnly(['obraz', 'kiedy'])
+        && request.resource.data.obraz is string
+        && request.resource.data.obraz.size() < 300000
+        && request.resource.data.kiedy == request.time
+        && (id == 'start' || id in postep().rozwiazane || id in postep().pominiete);
+      allow delete: if admin();
+    }
+
     match /postep/{uid} {
       allow read: if admin() || (gracz() && request.auth.uid == uid);
       allow create: if gracz() && request.auth.uid == uid && poprawnyPostep(request.resource.data);
