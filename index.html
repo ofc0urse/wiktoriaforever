@@ -232,6 +232,81 @@
     color: var(--tusz); font-weight: 800; text-align: center; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
   }
   @media (prefers-reduced-motion: reduce) { .kot .ogon, .kot.mruczy svg, .serce, .deszcz { animation: none; } .serce, .deszcz { display: none; } }
+
+  /* ===== Ruch ===== */
+  body::before, body::after {
+    content: ''; position: fixed; z-index: -1; width: 70vmax; height: 70vmax; border-radius: 50%;
+    filter: blur(70px); opacity: 0.45; pointer-events: none; animation: plama 24s ease-in-out infinite alternate;
+  }
+  body::before { background: #F6D8DC; top: -35vmax; left: -30vmax; }
+  body::after { background: #DCEBDF; bottom: -35vmax; right: -30vmax; animation-delay: -12s; }
+  @keyframes plama { to { transform: translate(10vmax, 8vmax) scale(1.12); } }
+  body.na-strychu::before, body.na-strychu::after { display: none; }
+
+  .przycisk, .tekstowy, .klodka, .karta, .licznik { transition: transform 0.15s ease, background-color 0.2s, box-shadow 0.25s, opacity 0.2s; }
+  .przycisk:active, .tekstowy:active { transform: scale(0.95); }
+  .karta:hover { box-shadow: 0 8px 22px rgba(42, 36, 34, 0.08); }
+  .pole { transition: border-color 0.2s, box-shadow 0.2s; }
+  .pole:focus { box-shadow: 0 0 0 4px rgba(47, 107, 58, 0.15); }
+
+  @keyframes wejdz { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+  .czeka { opacity: 0; transform: translateY(22px); }
+  .wejdz { animation: wejdz 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: var(--d, 0ms); }
+  .logowanie > *, .skan > *, .czekanie > * { animation: wejdz 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .logowanie > *:nth-child(2), .skan > *:nth-child(2), .czekanie > *:nth-child(2) { animation-delay: 0.08s; }
+  .logowanie > *:nth-child(3), .skan > *:nth-child(3), .czekanie > *:nth-child(3) { animation-delay: 0.16s; }
+  .logowanie > *:nth-child(4), .skan > *:nth-child(4), .czekanie > *:nth-child(4) { animation-delay: 0.24s; }
+  .logowanie > *:nth-child(n+5), .skan > *:nth-child(n+5), .czekanie > *:nth-child(n+5) { animation-delay: 0.32s; }
+
+  .karta.swieza { animation: swieza 0.7s cubic-bezier(0.2, 1.4, 0.4, 1); }
+  @keyframes swieza { 0% { transform: scale(0.94); box-shadow: 0 0 0 0 rgba(47, 107, 58, 0.5); } 60% { transform: scale(1.02); } 100% { transform: scale(1); box-shadow: 0 0 0 14px rgba(47, 107, 58, 0); } }
+  .karta.swieza .otworz { animation: wejdz 0.5s 0.15s both; }
+  .litera.nowa { animation: litera 0.8s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  @keyframes litera { 0% { transform: scale(0.3) rotate(-20deg); } 70% { transform: scale(1.25) rotate(6deg); } 100% { transform: none; } }
+  .podp.swiezy { animation: wejdz 0.45s both; transform-origin: top; }
+  .cyfra.tyk b { display: inline-block; animation: tyk 0.35s ease-out; }
+  @keyframes tyk { from { transform: translateY(-6px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+  .zamkniety { transition: transform 0.2s; }
+  .klodka:active svg { animation: klodka 0.4s; }
+  @keyframes klodka { 25% { transform: rotate(-14deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-6deg); } }
+  .kot .otwarte { transform-box: fill-box; transform-origin: center; animation: mrug 5.5s infinite; }
+  @keyframes mrug { 0%, 93%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+  .kot svg { animation: oddech 3.2s ease-in-out infinite; transform-origin: 60px 115px; }
+  @keyframes oddech { 50% { transform: scale(1.02, 0.985); } }
+  .skrzynia { animation: skrzynia 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: var(--d, 0ms); }
+  @keyframes skrzynia { from { opacity: 0; transform: translateY(30px) rotate(-1.5deg); } to { opacity: 1; transform: none; } }
+  .strych h1 { animation: wejdz 0.7s 0.1s both; }
+  .strych .mala, .strych-wstep { animation: wejdz 0.7s 0.2s both; }
+  .pajeczyna { animation: pajeczyna 6s ease-in-out infinite alternate; transform-origin: top right; }
+  @keyframes pajeczyna { to { transform: scaleX(-1) rotate(3deg); } }
+
+  /* Schody na strych */
+  .schody { position: fixed; inset: 0; z-index: 200; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; transition: opacity 0.5s; }
+  .schody.gora { animation: schodyGora 1.7s ease-in forwards; }
+  .schody.dol { animation: schodyDol 1.7s ease-out forwards; }
+  @keyframes schodyGora { 0% { background: rgba(255, 253, 248, 0); } 12% { background: #FFFDF8; } 100% { background: #241C19; } }
+  @keyframes schodyDol { 0% { background: rgba(36, 28, 25, 0); } 12% { background: #241C19; } 100% { background: #FFFDF8; } }
+  .schody.znika { opacity: 0; }
+  .schody-scena { position: absolute; left: -30%; right: -30%; top: 0; bottom: -10%; perspective: 520px; perspective-origin: 50% 0%; animation: krok 0.42s ease-in-out infinite alternate; }
+  @keyframes krok { from { transform: translateY(0) rotate(-0.6deg); } to { transform: translateY(14px) rotate(0.6deg); } }
+  .stopnie {
+    position: absolute; inset: 0; transform: rotateX(62deg); transform-origin: 50% 100%;
+    background: repeating-linear-gradient(to bottom, #9A7652 0 54px, #6B4F37 54px 62px, #4A3626 62px 70px);
+    box-shadow: inset 60px 0 60px -20px rgba(0, 0, 0, 0.45), inset -60px 0 60px -20px rgba(0, 0, 0, 0.45);
+  }
+  .schody.gora .stopnie { animation: wGore 1.7s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+  .schody.dol .stopnie { animation: wDol 1.7s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+  @keyframes wGore { from { background-position: 0 0; filter: brightness(1.1); } to { background-position: 0 560px; filter: brightness(0.45); } }
+  @keyframes wDol { from { background-position: 0 560px; filter: brightness(0.45); } to { background-position: 0 0; filter: brightness(1.1); } }
+  .schody-winieta { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 35%, transparent 30%, rgba(0, 0, 0, 0.55) 100%); }
+  .schody-tekst {
+    position: relative; margin: 0 0 18vh; font-family: var(--odr); font-size: 40px; font-weight: 700; color: #F3E6D3;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); animation: wejdz 0.5s 0.2s both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body::before, body::after, .wejdz, .logowanie > *, .skan > *, .czekanie > *, .karta.swieza, .litera.nowa, .skrzynia, .kot svg, .kot .otwarte, .pajeczyna { animation: none !important; }
+    .czeka { opacity: 1; transform: none; }
+  }
   .blad-ogolny { padding: 12px 14px; border-radius: 12px; border: 2px solid var(--blad); color: var(--blad); font-weight: 700; margin-bottom: 18px; }
 </style>
 </head>
@@ -592,8 +667,8 @@ async function widokStrychu() {
   let lista = [];
   try { lista = await api.strych(); } catch (e) { console.warn(e); }
   const pyl = Array.from({ length: 14 }, () => `<span class="pylek" style="left:${Math.random() * 100}%;animation-delay:${(Math.random() * 8).toFixed(1)}s;animation-duration:${(7 + Math.random() * 6).toFixed(1)}s"></span>`).join('');
-  const karty = lista.length ? lista.map((x) => `
-      <article class="skrzynia">
+  const karty = lista.length ? lista.map((x, i) => `
+      <article class="skrzynia" style="--d:${250 + i * 140}ms">
         ${x.tytul ? `<h3>${esc(x.tytul)}</h3>` : ''}
         ${x.tresc ? `<p class="tresc">${esc(x.tresc)}</p>` : ''}
         ${x.rodzaj === 'film' && x.link ? osadzFilm(x.link) : ''}
@@ -611,9 +686,58 @@ async function widokStrychu() {
   window.scrollTo(0, 0);
 }
 function zejdzZeStrychu() {
-  document.body.classList.remove('na-strychu');
-  widokGry();
-  window.scrollTo(0, 0);
+  return schody('dol', async () => {
+    document.body.classList.remove('na-strychu');
+    st.bylRender = false;
+    widokGry();
+    window.scrollTo(0, 0);
+  });
+}
+function wejdzNaStrych() { return schody('gora', widokStrychu); }
+
+const malyRuch = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let wTrakcieSchodow = false;
+async function schody(kierunek, potem) {
+  if (wTrakcieSchodow) return;
+  if (malyRuch()) { await potem(); return; }
+  wTrakcieSchodow = true;
+  const o = document.createElement('div');
+  o.className = `schody ${kierunek}`;
+  o.setAttribute('aria-hidden', 'true');
+  o.innerHTML = `<div class="schody-scena"><div class="stopnie"></div></div><div class="schody-winieta"></div>
+    <p class="schody-tekst">${kierunek === 'gora' ? 'tup… tup… skrzyp…' : 'tup… tup… tup…'}</p>`;
+  document.body.append(o);
+  const czasSchodow = czekaj(1700);
+  await czekaj(900);
+  try { await potem(); } catch (e) { console.warn(e); }
+  await czasSchodow;
+  o.classList.add('znika');
+  await czekaj(500);
+  o.remove();
+  wTrakcieSchodow = false;
+}
+
+/* ---------- animacje po narysowaniu widoku ---------- */
+function poRenderze() {
+  if (!st.bylRender) { st.bylRender = true; animujWejscie(); }
+  if (st.swieza) { document.getElementById(`z${st.swieza}`)?.classList.add('swieza'); st.swieza = null; }
+  st.nowaLiteraNr = null; st.nowaPodp = null;
+}
+function animujWejscie() {
+  if (malyRuch() || !('IntersectionObserver' in window)) return;
+  const el = [...document.querySelectorAll('.naglowek > *, .dzien')];
+  el.forEach((e) => e.classList.add('czeka'));
+  let kolejka = 0;
+  const io = new IntersectionObserver((wpisy) => {
+    wpisy.forEach((w) => {
+      if (!w.isIntersecting) return;
+      w.target.style.setProperty('--d', `${Math.min(kolejka++, 6) * 80}ms`);
+      w.target.classList.remove('czeka'); w.target.classList.add('wejdz');
+      io.unobserve(w.target);
+    });
+    setTimeout(() => { kolejka = 0; }, 250);
+  }, { threshold: 0.05 });
+  el.forEach((e) => io.observe(e));
 }
 
 const zrobiona = (nr) => st.postep.rozwiazane.includes(nr) || st.postep.pominiete.includes(nr);
@@ -668,7 +792,7 @@ function kartaOtwarta(z) {
       ${z.tytul ? `<h3>${esc(z.tytul)}</h3>` : ''}
       ${z.tresc ? `<p class="tresc">${esc(z.tresc)}</p>` : ''}
       ${z.kod ? `<div class="kod">${esc(z.kod)}</div>` : ''}
-      ${st.podpowiedzi[nr] !== undefined ? `<p class="podp"><b>Podpowiedź</b>${esc(st.podpowiedzi[nr])}</p>` : ''}
+      ${st.podpowiedzi[nr] !== undefined ? `<p class="podp${st.nowaPodp === nr ? ' swiezy' : ''}"><b>Podpowiedź</b>${esc(st.podpowiedzi[nr])}</p>` : ''}
       <form class="wiersz" data-nr="${nr}" novalidate>
         <label class="sr" for="odp${nr}">Odpowiedź do paczki ${nr}</label>
         <input class="pole" id="odp${nr}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Odpowiedź" value="${esc(st.wpisane[nr] || '')}">
@@ -700,13 +824,13 @@ function widokGry() {
   st.zagadki.forEach((z) => { (zaDni[S.dzienPaczki(z.nr)] ||= []).push(z); });
 
   // litery do finału, w kolejności paczek
-  const zebrane = Object.keys(st.nagrody).map(Number).sort((a, b) => a - b)
-    .map((nr) => (st.nagrody[nr] || {}).litera).filter(Boolean);
+  const zebraneNr = Object.keys(st.nagrody).map(Number).sort((a, b) => a - b).filter((nr) => (st.nagrody[nr] || {}).litera);
+  const zebrane = zebraneNr.map((nr) => st.nagrody[nr].litera);
   const ileLiter = Math.max(st.liczbaLiter || 7, zebrane.length);
   const litery = [];
   for (let i = 0; i < ileLiter; i++) {
     const l = zebrane[i] || '';
-    litery.push(`<span class="litera${l ? ' jest' : ''}" aria-label="Litera ${i + 1}: ${l || 'jeszcze brak'}">${esc(l)}</span>`);
+    litery.push(`<span class="litera${l ? ' jest' : ''}${l && zebraneNr[i] === st.nowaLiteraNr ? ' nowa' : ''}" aria-label="Litera ${i + 1}: ${l || 'jeszcze brak'}">${esc(l)}</span>`);
   }
 
   const teraz = Date.now();
@@ -751,6 +875,7 @@ function widokGry() {
     <div class="dni">${dni}</div>
     <footer class="stopka"><span>Postęp zapisuje się sam.</span><button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></footer>`;
   if (pierwsza) { const el = document.getElementById(pierwsza); if (el) el.focus(); }
+  poRenderze();
 }
 
 /* ---------- ładowanie ---------- */
@@ -872,7 +997,7 @@ function widokCzekania(cel) {
     const el = document.getElementById('zegar');
     if (el) {
       el.innerHTML = [[d, d === 1 ? 'dzień' : 'dni'], [dwa(h), 'godz'], [dwa(m), 'min'], [dwa(sek), 'sek']]
-        .map(([v, l]) => `<span class="cyfra"><b>${v}</b><small>${l}</small></span>`).join('');
+        .map(([v, l], i) => `<span class="cyfra${i === 3 ? ' tyk' : ''}"><b>${v}</b><small>${l}</small></span>`).join('');
     }
   };
   tik();
@@ -915,6 +1040,8 @@ const BLAD_SIECI = 'Coś poszło nie tak. Sprawdź internet i spróbuj jeszcze r
 async function poZrobieniu(nr) {
   st.nagrody[nr] = await api.nagroda(nr);
   st.postep = await api.postep();
+  st.swieza = nr;
+  st.nowaLiteraNr = st.nagrody[nr] && st.nagrody[nr].litera ? nr : null;
 }
 
 $app.addEventListener('submit', async (ev) => {
@@ -944,7 +1071,7 @@ $app.addEventListener('submit', async (ev) => {
   if (S.normalizuj(odp) === 'STRYCH') {
     st.strych = true; st.wpisane[nr] = '';
     try { localStorage.setItem('zostaw-strych', '1'); } catch (e) { /* trudno, wpisze jeszcze raz */ }
-    widokStrychu();
+    wejdzNaStrych();
     return;
   }
   if (RICKROLL.includes(S.normalizuj(odp))) {
@@ -995,7 +1122,7 @@ $app.addEventListener('click', async (ev) => {
   if (!b) return;
   const a = b.dataset.a, nr = Number(b.dataset.nr);
   if (a === 'wyloguj') { stopZegar(); zatrzymajKamere(); await api.wyloguj(); widokLogowania(); return; }
-  if (a === 'strych') { widokStrychu(); return; }
+  if (a === 'strych') { wejdzNaStrych(); return; }
   if (a === 'ze-strychu') { zejdzZeStrychu(); return; }
   if (a === 'demo-odliczanie') { widokCzekania(Date.now() + 2 * 86400000 + 3 * 3600000); return; }
   if (a === 'demo-wszystko') { api.otworzWszystko(); await startGry(false); return; }
@@ -1008,6 +1135,7 @@ $app.addEventListener('click', async (ev) => {
     try {
       if (co === 'podp') {
         st.podpowiedzi[nr] = await api.podpowiedz(nr);
+        st.nowaPodp = nr;
         st.postep = await api.postep();
       } else {
         await api.pomin(nr);
