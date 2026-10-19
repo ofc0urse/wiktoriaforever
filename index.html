@@ -280,29 +280,45 @@
   .pajeczyna { animation: pajeczyna 6s ease-in-out infinite alternate; transform-origin: top right; }
   @keyframes pajeczyna { to { transform: scaleX(-1) rotate(3deg); } }
 
-  /* Schody na strych */
-  .schody { position: fixed; inset: 0; z-index: 200; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; transition: opacity 0.5s; }
-  .schody.gora { animation: schodyGora 1.7s ease-in forwards; }
-  .schody.dol { animation: schodyDol 1.7s ease-out forwards; }
-  @keyframes schodyGora { 0% { background: rgba(255, 253, 248, 0); } 12% { background: #FFFDF8; } 100% { background: #241C19; } }
-  @keyframes schodyDol { 0% { background: rgba(36, 28, 25, 0); } 12% { background: #241C19; } 100% { background: #FFFDF8; } }
-  .schody.znika { opacity: 0; }
-  .schody-scena { position: absolute; left: -30%; right: -30%; top: 0; bottom: -10%; perspective: 520px; perspective-origin: 50% 0%; animation: krok 0.42s ease-in-out infinite alternate; }
-  @keyframes krok { from { transform: translateY(0) rotate(-0.6deg); } to { transform: translateY(14px) rotate(0.6deg); } }
-  .stopnie {
-    position: absolute; inset: 0; transform: rotateX(62deg); transform-origin: 50% 100%;
-    background: repeating-linear-gradient(to bottom, #9A7652 0 54px, #6B4F37 54px 62px, #4A3626 62px 70px);
-    box-shadow: inset 60px 0 60px -20px rgba(0, 0, 0, 0.45), inset -60px 0 60px -20px rgba(0, 0, 0, 0.45);
+  /* Przejście na strych i z powrotem: tylko transform i opacity, żeby było płynnie na telefonie */
+  .przejscie { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: auto; }
+  .przejscie .pas {
+    position: absolute; left: 0; right: 0; top: 0; height: 170vh; will-change: transform;
+    transition: transform 0.7s cubic-bezier(0.55, 0, 0.75, 0.2);
   }
-  .schody.gora .stopnie { animation: wGore 1.7s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
-  .schody.dol .stopnie { animation: wDol 1.7s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
-  @keyframes wGore { from { background-position: 0 0; filter: brightness(1.1); } to { background-position: 0 560px; filter: brightness(0.45); } }
-  @keyframes wDol { from { background-position: 0 560px; filter: brightness(0.45); } to { background-position: 0 0; filter: brightness(1.1); } }
-  .schody-winieta { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 35%, transparent 30%, rgba(0, 0, 0, 0.55) 100%); }
-  .schody-tekst {
-    position: relative; margin: 0 0 18vh; font-family: var(--odr); font-size: 40px; font-weight: 700; color: #F3E6D3;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); animation: wejdz 0.5s 0.2s both;
+  .przejscie.gora .pas {
+    transform: translateY(-170vh);
+    background:
+      linear-gradient(to bottom, #241C19 0%, #241C19 30%, rgba(36, 28, 25, 0) 70%),
+      repeating-linear-gradient(to bottom, #7A5B40 0 9vh, #5A4331 9vh 10vh, #3A2B1F 10vh 10.8vh);
+    -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent 100%); mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
   }
+  .przejscie.dol .pas {
+    top: auto; bottom: 0; transform: translateY(170vh);
+    background:
+      linear-gradient(to top, #FFFDF8 0%, #FFFDF8 30%, rgba(255, 253, 248, 0) 70%),
+      repeating-linear-gradient(to bottom, #7A5B40 0 9vh, #5A4331 9vh 10vh, #3A2B1F 10vh 10.8vh);
+    -webkit-mask-image: linear-gradient(to top, #000 82%, transparent 100%); mask-image: linear-gradient(to top, #000 82%, transparent 100%);
+  }
+  .przejscie.zakryj .pas { transform: translateY(-35vh); }
+  .przejscie.dol.zakryj .pas { transform: translateY(35vh); }
+  .przejscie.odkryj .pas { transition: transform 1s cubic-bezier(0.35, 0, 0.25, 1); }
+  .przejscie.gora.odkryj .pas { transform: translateY(110vh); }
+  .przejscie.dol.odkryj .pas { transform: translateY(-110vh); }
+  .przejscie-tekst {
+    position: absolute; left: 0; right: 0; top: 44%; margin: 0; padding: 0 16px; text-align: center; font-family: var(--odr); font-size: 32px; font-weight: 700;
+    color: #F3E6D3; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); opacity: 0; transition: opacity 0.35s 0.25s;
+  }
+  .przejscie.dol .przejscie-tekst { color: #5A4331; text-shadow: none; }
+  .przejscie.zakryj .przejscie-tekst { opacity: 1; }
+  .przejscie.odkryj .przejscie-tekst { opacity: 0; transition-delay: 0s; transition-duration: 0.25s; }
+  #app.odjazd-dol, #app.odjazd-gora { transition: transform 0.7s cubic-bezier(0.55, 0, 0.75, 0.2), opacity 0.7s; opacity: 0.25; }
+  #app.odjazd-dol { transform: translateY(22vh); }
+  #app.odjazd-gora { transform: translateY(-22vh); }
+  #app.przyjazd-gora { animation: przyjazdGora 1s cubic-bezier(0.35, 0, 0.25, 1) both; }
+  #app.przyjazd-dol { animation: przyjazdDol 1s cubic-bezier(0.35, 0, 0.25, 1) both; }
+  @keyframes przyjazdGora { from { transform: translateY(-22vh); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes przyjazdDol { from { transform: translateY(22vh); opacity: 0; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) {
     body::before, body::after, .wejdz, .logowanie > *, .skan > *, .czekanie > *, .karta.swieza, .litera.nowa, .skrzynia, .kot svg, .kot .otwarte, .pajeczyna { animation: none !important; }
     .czeka { opacity: 1; transform: none; }
@@ -661,11 +677,13 @@ function osadzFilm(link) {
   return `<a class="przycisk strych-link" href="${esc(u.href)}" target="_blank" rel="noopener">Otwórz</a>`;
 }
 
-async function widokStrychu() {
+async function widokStrychu(gotowe) {
   document.body.classList.add('na-strychu');
-  $app.innerHTML = '<div class="ladowanie strych-ladowanie">Wchodzę po schodach…</div>';
-  let lista = [];
-  try { lista = await api.strych(); } catch (e) { console.warn(e); }
+  let lista = gotowe || [];
+  if (!gotowe) {
+    $app.innerHTML = '<div class="ladowanie strych-ladowanie">Wchodzę po schodach…</div>';
+    try { lista = await api.strych(); } catch (e) { console.warn(e); }
+  }
   const pyl = Array.from({ length: 14 }, () => `<span class="pylek" style="left:${Math.random() * 100}%;animation-delay:${(Math.random() * 8).toFixed(1)}s;animation-duration:${(7 + Math.random() * 6).toFixed(1)}s"></span>`).join('');
   const karty = lista.length ? lista.map((x, i) => `
       <article class="skrzynia" style="--d:${250 + i * 140}ms">
@@ -693,7 +711,10 @@ function zejdzZeStrychu() {
     window.scrollTo(0, 0);
   });
 }
-function wejdzNaStrych() { return schody('gora', widokStrychu); }
+function wejdzNaStrych() {
+  const dane = api.strych().catch((e) => { console.warn(e); return []; });
+  return schody('gora', async () => widokStrychu(await dane));
+}
 
 const malyRuch = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let wTrakcieSchodow = false;
@@ -701,19 +722,28 @@ async function schody(kierunek, potem) {
   if (wTrakcieSchodow) return;
   if (malyRuch()) { await potem(); return; }
   wTrakcieSchodow = true;
+  const gora = kierunek === 'gora';
   const o = document.createElement('div');
-  o.className = `schody ${kierunek}`;
+  o.className = `przejscie ${kierunek}`;
   o.setAttribute('aria-hidden', 'true');
-  o.innerHTML = `<div class="schody-scena"><div class="stopnie"></div></div><div class="schody-winieta"></div>
-    <p class="schody-tekst">${kierunek === 'gora' ? 'tup… tup… skrzyp…' : 'tup… tup… tup…'}</p>`;
+  o.innerHTML = `<div class="pas"></div><p class="przejscie-tekst">${gora ? 'tup… tup… skrzyp…' : 'tup… tup… tup…'}</p>`;
   document.body.append(o);
-  const czasSchodow = czekaj(1700);
-  await czekaj(900);
+  void o.offsetWidth;
+  // 1. stara strona odjeżdża, stopnie nadjeżdżają i zakrywają ekran
+  $app.classList.add(gora ? 'odjazd-dol' : 'odjazd-gora');
+  o.classList.add('zakryj');
+  await czekaj(720);
+  // 2. pod zasłoną podmieniamy zawartość
+  $app.classList.remove('odjazd-dol', 'odjazd-gora');
   try { await potem(); } catch (e) { console.warn(e); }
-  await czasSchodow;
-  o.classList.add('znika');
-  await czekaj(500);
+  window.scrollTo(0, 0);
+  // 3. stopnie odjeżdżają dalej, nowa strona wjeżdża
+  void $app.offsetWidth;
+  $app.classList.add(gora ? 'przyjazd-gora' : 'przyjazd-dol');
+  o.classList.add('odkryj');
+  await czekaj(1020);
   o.remove();
+  $app.classList.remove('przyjazd-gora', 'przyjazd-dol');
   wTrakcieSchodow = false;
 }
 
