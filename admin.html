@@ -90,15 +90,22 @@
 
   <section class="blok" aria-labelledby="h-strych">
     <h2 id="h-strych">Strych (tajna strona)</h2>
-    <p class="info">Otwiera się, gdy ona wpisze <b>strych</b> w dowolne pole odpowiedzi. Filmik wrzuć na YouTube jako <b>Niepubliczny</b> albo na Dysk Google (Udostępnij → „Każda osoba mająca link”) i wklej link. Same napisy też mogą być.</p>
+    <p class="info">Otwiera się, gdy ona wpisze <b>strych</b> w pole odpowiedzi. Każda skrzynia ma swój dzień i godzinę otwarcia: wcześniej ona widzi tylko zamkniętą skrzynię z datą. Filmik: YouTube jako <b>Niepubliczny</b> albo Dysk Google („Każda osoba mająca link”). Zdjęcie wybierasz z telefonu lub komputera, zmniejszy się samo.</p>
     <div class="wiersz">
       <label for="st-tytul">Tytuł</label><input class="pole" id="st-tytul" style="flex:1 1 220px">
-      <label for="st-kol">Kolejność</label><input class="pole" id="st-kol" type="number" value="1" style="width:80px">
     </div>
     <label for="st-tresc">Napis</label>
-    <textarea class="pole" id="st-tresc" placeholder="Co chcesz jej napisać (może być puste przy filmiku)"></textarea>
+    <textarea class="pole" id="st-tresc" placeholder="Co chcesz jej napisać (może być puste)"></textarea>
     <div class="wiersz">
-      <label for="st-link">Link do filmiku (opcjonalnie)</label><input class="pole" id="st-link" type="url" placeholder="https://youtu.be/..." style="flex:1 1 260px">
+      <label for="st-link">Link do filmiku</label><input class="pole" id="st-link" type="url" placeholder="https://youtu.be/..." style="flex:1 1 260px">
+    </div>
+    <div class="wiersz">
+      <label for="st-foto">Zdjęcie</label><input class="pole" id="st-foto" type="file" accept="image/*">
+    </div>
+    <div class="wiersz">
+      <label for="st-data">Otwiera się dnia</label><input class="pole" id="st-data" type="date">
+      <label for="st-godz">o</label><input class="pole" id="st-godz" type="time" value="06:00">
+      <span class="info">(puste = od razu)</span>
     </div>
     <div class="wiersz">
       <button class="przycisk" type="button" id="st-dodaj" disabled>Dodaj na strych</button>
@@ -246,23 +253,68 @@ function odswiezPrzyciski() {
 }
 
 /* ---------- Strych ---------- */
+function zmniejsz(plik, maks = 1280) {
+  return new Promise((ok, zle) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, maks / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      let q = 0.82, url = c.toDataURL('image/jpeg', q);
+      while (url.length > 850000 && q > 0.35) { q -= 0.1; url = c.toDataURL('image/jpeg', q); }
+      url.length > 850000 ? zle(new Error('Zdjęcie za duże')) : ok(url);
+    };
+    img.onerror = () => zle(new Error('To nie wygląda na zdjęcie'));
+    img.src = URL.createObjectURL(plik);
+  });
+}
+async function przebudujSpis() {
+  const s = await F.getDocs(F.collection(db, 'strych'));
+  const pozycje = s.docs.map((d) => ({ id: d.id, odblokowanie: d.data().odblokowanie, k: d.data().kolejnosc || 0 }))
+    .sort((a, b) => a.odblokowanie.toMillis() - b.odblokowanie.toMillis() || a.k - b.k)
+    .map(({ id, odblokowanie }) => ({ id, odblokowanie }));
+  await F.setDoc(F.doc(db, 'ustawienia', 'strych'), { pozycje });
+}
 $('st-dodaj').onclick = async () => {
   const tytul = $('st-tytul').value.trim(), tresc = $('st-tresc').value.trim(), link = $('st-link').value.trim();
-  if (!tytul && !tresc && !link) { $('st-info').innerHTML = '<span class="zle">Wpisz chociaż tytuł, napis albo link.</span>'; return; }
+  const plik = $('st-foto').files[0];
+  if (!tytul && !tresc && !link && !plik) { $('st-info').innerHTML = '<span class="zle">Wpisz coś albo dodaj zdjęcie lub link.</span>'; return; }
   if (link && !/^https:\/\//.test(link)) { $('st-info').innerHTML = '<span class="zle">Link musi zaczynać się od https://</span>'; return; }
+  const btn = $('st-dodaj'); btn.disabled = true; btn.textContent = 'Dodaję…';
   try {
-    await F.addDoc(F.collection(db, 'strych'), { tytul, tresc, link, rodzaj: link ? 'film' : 'tekst', kolejnosc: Number($('st-kol').value) || 0 });
-    $('st-info').innerHTML = '<span class="ok">Dodane na strych.</span>';
-    $('st-tytul').value = ''; $('st-tresc').value = ''; $('st-link').value = ''; $('st-kol').value = String((Number($('st-kol').value) || 0) + 1);
+    let obraz = '';
+    if (plik) obraz = await zmniejsz(plik);
+    let kiedy = Date.now() - 60000;
+    if ($('st-data').value) {
+      const [y, m, d] = $('st-data').value.split('-').map(Number);
+      const [h, mi] = ($('st-godz').value || '00:00').split(':').map(Number);
+      kiedy = S.warszawaNaUtc(y, m, d, h) + (mi || 0) * 60000;
+    }
+    await F.addDoc(F.collection(db, 'strych'), {
+      tytul, tresc, link, obraz, rodzaj: obraz ? 'zdjecie' : (link ? 'film' : 'tekst'),
+      odblokowanie: F.Timestamp.fromMillis(kiedy), kolejnosc: Date.now()
+    });
+    await przebudujSpis();
+    $('st-info').innerHTML = `<span class="ok">Dodane. Otworzy się: ${esc(fmt(kiedy))}.</span>`;
+    ['st-tytul', 'st-tresc', 'st-link'].forEach((id) => { $(id).value = ''; });
+    $('st-foto').value = '';
     pokazStrych();
   } catch (e) { $('st-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}. Czy wkleiłeś nowe reguły?</span>`; }
+  btn.disabled = false; btn.textContent = 'Dodaj na strych';
 };
 async function pokazStrych() {
   try {
-    const s = await F.getDocs(F.query(F.collection(db, 'strych'), F.orderBy('kolejnosc')));
+    const s = await F.getDocs(F.collection(db, 'strych'));
     if (s.empty) { $('st-lista').innerHTML = '<p class="info">Strych jest pusty.</p>'; return; }
-    $('st-lista').innerHTML = `<div class="tabela"><table><thead><tr><th>Kol.</th><th>Tytuł</th><th>Napis</th><th>Link</th><th></th></tr></thead><tbody>${
-      s.docs.map((d) => { const x = d.data(); return `<tr><td>${esc(x.kolejnosc)}</td><td>${esc(x.tytul)}</td><td>${esc((x.tresc || '').slice(0, 80))}</td><td>${x.link ? `<a href="${esc(x.link)}" target="_blank" rel="noopener">link</a>` : ''}</td><td><button class="przycisk grozny" type="button" data-usun="${esc(d.id)}">Usuń</button></td></tr>`; }).join('')
+    const docs = [...s.docs].sort((a, b) => a.data().odblokowanie.toMillis() - b.data().odblokowanie.toMillis());
+    $('st-lista').innerHTML = `<div class="tabela"><table><thead><tr><th>Otwiera się</th><th>Tytuł</th><th>Co</th><th></th></tr></thead><tbody>${
+      docs.map((d) => {
+        const x = d.data();
+        const co = x.obraz ? 'zdjęcie' : (x.link ? `<a href="${esc(x.link)}" target="_blank" rel="noopener">filmik</a>` : 'tekst');
+        return `<tr><td>${esc(fmt(x.odblokowanie.toMillis()))}</td><td>${esc(x.tytul || (x.tresc || '').slice(0, 40))}</td><td>${co}</td><td><button class="przycisk grozny" type="button" data-usun="${esc(d.id)}">Usuń</button></td></tr>`;
+      }).join('')
     }</tbody></table></div>`;
   } catch (e) { $('st-lista').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}</p>`; }
 }
@@ -271,7 +323,7 @@ $('st-lista').addEventListener('click', async (ev) => {
   const b = ev.target.closest('[data-usun]');
   if (!b) return;
   if (b.dataset.pewne !== '1') { b.dataset.pewne = '1'; b.textContent = 'Na pewno?'; return; }
-  try { await F.deleteDoc(F.doc(db, 'strych', b.dataset.usun)); pokazStrych(); }
+  try { await F.deleteDoc(F.doc(db, 'strych', b.dataset.usun)); await przebudujSpis(); pokazStrych(); }
   catch (e) { $('st-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}</span>`; }
 });
 

@@ -216,6 +216,10 @@
   .strych-wejscie { background: #33281F; border-color: #33281F; height: 44px; }
   .strych-wejscie:hover { background: #241C19; }
   .strych-pusto { color: #CDBBA4; font-style: italic; }
+  .skrzynia.zamknieta { flex-direction: row; align-items: center; gap: 12px; color: #CDBBA4; border-style: dashed; background: #2B211A; }
+  .skrzynia.zamknieta b { color: #F2D29B; }
+  .zdjecie-strych { margin: 0; padding: 10px 10px 28px; background: #F6EFE4; border-radius: 6px; transform: rotate(-1.2deg); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); align-self: center; max-width: 100%; }
+  .zdjecie-strych img { display: block; max-width: 100%; max-height: 70vh; border-radius: 2px; }
   .strych-ladowanie { color: #CDBBA4; }
   .pyl { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
   .pylek { position: absolute; bottom: -10px; width: 4px; height: 4px; border-radius: 50%; background: rgba(243, 214, 160, 0.55); animation: pylek linear infinite; }
@@ -543,7 +547,8 @@ function demoApi() {
     async strych() {
       return [
         { tytul: 'Przykładowy napis', rodzaj: 'tekst', tresc: 'Tu będą Twoje napisy.\nDodajesz je w panelu admina, w sekcji Strych.' },
-        { tytul: 'Przykładowy film', rodzaj: 'film', tresc: 'Film z YouTube (niepubliczny) albo z Dysku Google.', link: 'https://www.youtube.com/watch?v=QDia3e12czc' }
+        { tytul: 'Przykładowy film', rodzaj: 'film', tresc: 'Film z YouTube (niepubliczny) albo z Dysku Google.', link: 'https://www.youtube.com/watch?v=QDia3e12czc' },
+        { zablokowana: true, odblokowanie: Date.now() + 86400000 }
       ];
     },
     otworzWszystko() { pam.wszystko = true; zapisz(); },
@@ -624,8 +629,17 @@ async function firebaseApi() {
       return s.exists() ? s.data() : {};
     },
     async strych() {
-      const s = await F.getDocs(F.query(F.collection(db, 'strych'), F.orderBy('kolejnosc')));
-      return s.docs.map((d) => d.data());
+      // Spis (bez treści) jest jawny dla gracza; treść każdej skrzyni serwer wydaje dopiero po jej godzinie.
+      const spis = await F.getDoc(F.doc(db, 'ustawienia', 'strych'));
+      const pozycje = spis.exists() && Array.isArray(spis.data().pozycje) ? spis.data().pozycje : [];
+      return Promise.all(pozycje.map(async (poz) => {
+        const kiedy = poz.odblokowanie ? poz.odblokowanie.toMillis() : 0;
+        if (kiedy > Date.now()) return { zablokowana: true, odblokowanie: kiedy };
+        try {
+          const d = await F.getDoc(F.doc(db, 'strych', poz.id));
+          return d.exists() ? { ...d.data(), odblokowanie: kiedy } : null;
+        } catch (e) { return { zablokowana: true, odblokowanie: kiedy }; }
+      })).then((l) => l.filter(Boolean));
     }
   };
 }
@@ -657,19 +671,23 @@ function widokStrychu(lista, laduje = false, blad = false) {
   document.body.classList.add('na-strychu');
   lista = lista || [];
   const pyl = Array.from({ length: 14 }, () => `<span class="pylek" style="left:${Math.random() * 100}%;animation-delay:${(Math.random() * 8).toFixed(1)}s;animation-duration:${(7 + Math.random() * 6).toFixed(1)}s"></span>`).join('');
-  const karty = lista.length ? lista.map((x, i) => `
+  const karty = lista.length ? lista.map((x, i) => (x.zablokowana ? `
+      <article class="skrzynia zamknieta" style="--d:${250 + i * 140}ms">
+        ${SVG_KLODKA}<span>Ta skrzynia otworzy się <b>${fmtDzien(x.odblokowanie)} o ${fmtGodz(x.odblokowanie)}</b>.</span>
+      </article>` : `
       <article class="skrzynia" style="--d:${250 + i * 140}ms">
         ${x.tytul ? `<h3>${esc(x.tytul)}</h3>` : ''}
         ${x.tresc ? `<p class="tresc">${esc(x.tresc)}</p>` : ''}
-        ${x.rodzaj === 'film' && x.link ? osadzFilm(x.link) : ''}
-      </article>`).join('') : `<p class="strych-pusto">${laduje ? 'Wnoszę pudła na górę…' : (blad ? 'Coś się zacięło na schodach. Zejdź i wejdź jeszcze raz.' : 'Na razie pusto. Ktoś jeszcze nie zdążył tu niczego schować :)')}</p>`;
+        ${typeof x.obraz === 'string' && x.obraz.startsWith('data:image/jpeg;base64,') ? `<figure class="zdjecie-strych"><img src="${x.obraz}" alt="${esc(x.tytul || 'Zdjęcie')}" loading="lazy"></figure>` : ''}
+        ${x.link ? osadzFilm(x.link) : ''}
+      </article>`)).join('') : `<p class="strych-pusto">${laduje ? 'Wnoszę pudła na górę…' : (blad ? 'Coś się zacięło na schodach. Zejdź i wejdź jeszcze raz.' : 'Na razie pusto. Ktoś jeszcze nie zdążył tu niczego schować :)')}</p>`;
   $app.innerHTML = `
     <div class="pyl" aria-hidden="true">${pyl}</div>
     <main class="strych">
       <svg class="pajeczyna" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path d="M0 0L100 100M0 0L100 40M0 0L40 100M0 0L100 0M0 0L0 100"/><path d="M0 20Q14 14 20 0M0 40Q28 28 40 0M0 62Q44 44 62 0M0 84Q60 60 84 0"/></g></svg>
       <p class="mala">psst…</p>
       <h1>Strych</h1>
-      <p class="strych-wstep">Znalazłaś tajne miejsce. Tu trzymam rzeczy tylko dla Ciebie.</p>
+      <p class="strych-wstep">Witamy w Twoim słynnym, na szczęście już trochę uporządkowanym strychu. Codziennie odblokowujesz tu filmik, hah, albo tekst, bądź zdjęcie.</p>
       <div class="skrzynie">${karty}</div>
       <button class="przycisk strych-wyjscie" type="button" data-a="ze-strychu">Zejdź na dół</button>
     </main>`;
@@ -685,7 +703,8 @@ function zejdzZeStrychu() {
 }
 // Zawartość strychu pobieramy w tle i trzymamy w pamięci, żeby animacja nigdy nie czekała na internet.
 let strychDane = null, strychObietnica = null;
-function pobierzStrych() {
+function pobierzStrych(swiezo = false) {
+  if (swiezo) strychObietnica = null;
   if (!strychObietnica) {
     strychObietnica = api.strych()
       .then((l) => { strychDane = l || []; return strychDane; })
@@ -694,15 +713,16 @@ function pobierzStrych() {
   return strychObietnica;
 }
 function wejdzNaStrych() {
-  const p = pobierzStrych();
+  const stare = strychDane;
+  const p = pobierzStrych(true);
   return schody('gora', async () => {
-    widokStrychu(strychDane || [], !strychDane);
-    if (!strychDane) {
-      p.then((l) => {
-        if (!document.body.classList.contains('na-strychu')) return;
-        widokStrychu(l || [], false, l === null);
-      });
-    }
+    widokStrychu(stare || [], !stare);
+    p.then((l) => {
+      if (!document.body.classList.contains('na-strychu')) return;
+      if (l === null && stare) return; // brak sieci: zostaje to, co było
+      if (stare && JSON.stringify(l) === JSON.stringify(stare)) return;
+      widokStrychu(l || [], false, l === null);
+    });
   });
 }
 

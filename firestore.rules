@@ -59,9 +59,11 @@ service cloud.firestore {
       allow read, delete: if admin();
     }
 
-    // Strych: tajna strona z Twoimi filmikami i napisami.
+    // Strych: tajna strona z Twoimi filmikami, napisami i zdjęciami.
+    // Każda skrzynia otwiera się o swojej godzinie (liczy serwer). Spis bez treści leży w ustawienia/strych.
     match /strych/{id} {
-      allow read: if gracz() || admin();
+      allow get: if admin() || (gracz() && request.time >= resource.data.odblokowanie);
+      allow list: if admin();
       allow write: if admin();
     }
 
