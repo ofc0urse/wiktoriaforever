@@ -322,7 +322,7 @@ const $app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const nrId = (nr) => String(nr).padStart(2, '0');
 const hasloFirebase = (h) => S.normalizuj(h).toLowerCase() + (CFG.koncowkaHasla || '');
-const HASLO_DEMO = '1943eb52b1e009541d27114cbd29abb2c5e15682682446390f9e976e543949ad'; // skrót hasła w trybie demo
+const HASLO_DEMO = '9b36ded8c4422c11704670306220a64c1f3b93580237a55e6b67447ab3e25704'; // skrót hasła w trybie demo
 const fmtDzien = (ms) => {
   const p = {};
   new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', weekday: 'short', day: 'numeric', month: 'numeric' })
