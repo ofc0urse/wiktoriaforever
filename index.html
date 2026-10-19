@@ -234,14 +234,14 @@
   @media (prefers-reduced-motion: reduce) { .kot .ogon, .kot.mruczy svg, .serce, .deszcz { animation: none; } .serce, .deszcz { display: none; } }
 
   /* ===== Ruch ===== */
-  body::before, body::after {
-    content: ''; position: fixed; z-index: -1; width: 70vmax; height: 70vmax; border-radius: 50%;
-    filter: blur(70px); opacity: 0.45; pointer-events: none; animation: plama 24s ease-in-out infinite alternate;
+  body::before {
+    content: ''; position: fixed; inset: -20%; z-index: -1; pointer-events: none; will-change: transform;
+    background: radial-gradient(circle at 15% 10%, rgba(246, 216, 220, 0.75), transparent 38%),
+                radial-gradient(circle at 85% 90%, rgba(220, 235, 223, 0.8), transparent 40%);
+    animation: plama 26s ease-in-out infinite alternate;
   }
-  body::before { background: #F6D8DC; top: -35vmax; left: -30vmax; }
-  body::after { background: #DCEBDF; bottom: -35vmax; right: -30vmax; animation-delay: -12s; }
-  @keyframes plama { to { transform: translate(10vmax, 8vmax) scale(1.12); } }
-  body.na-strychu::before, body.na-strychu::after { display: none; }
+  @keyframes plama { to { transform: translate(4%, 3%); } }
+  body.na-strychu::before { display: none; }
 
   .przycisk, .tekstowy, .klodka, .karta, .licznik { transition: transform 0.15s ease, background-color 0.2s, box-shadow 0.25s, opacity 0.2s; }
   .przycisk:active, .tekstowy:active { transform: scale(0.95); }
@@ -280,45 +280,21 @@
   .pajeczyna { animation: pajeczyna 6s ease-in-out infinite alternate; transform-origin: top right; }
   @keyframes pajeczyna { to { transform: scaleX(-1) rotate(3deg); } }
 
-  /* Przejście na strych i z powrotem: tylko transform i opacity, żeby było płynnie na telefonie */
-  .przejscie { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: auto; }
-  .przejscie .pas {
-    position: absolute; left: 0; right: 0; top: 0; height: 170vh; will-change: transform;
-    transition: transform 0.7s cubic-bezier(0.55, 0, 0.75, 0.2);
-  }
-  .przejscie.gora .pas {
-    transform: translateY(-170vh);
-    background:
-      linear-gradient(to bottom, #241C19 0%, #241C19 30%, rgba(36, 28, 25, 0) 70%),
-      repeating-linear-gradient(to bottom, #7A5B40 0 9vh, #5A4331 9vh 10vh, #3A2B1F 10vh 10.8vh);
-    -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent 100%); mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
-  }
-  .przejscie.dol .pas {
-    top: auto; bottom: 0; transform: translateY(170vh);
-    background:
-      linear-gradient(to top, #FFFDF8 0%, #FFFDF8 30%, rgba(255, 253, 248, 0) 70%),
-      repeating-linear-gradient(to bottom, #7A5B40 0 9vh, #5A4331 9vh 10vh, #3A2B1F 10vh 10.8vh);
-    -webkit-mask-image: linear-gradient(to top, #000 82%, transparent 100%); mask-image: linear-gradient(to top, #000 82%, transparent 100%);
-  }
-  .przejscie.zakryj .pas { transform: translateY(-35vh); }
-  .przejscie.dol.zakryj .pas { transform: translateY(35vh); }
-  .przejscie.odkryj .pas { transition: transform 1s cubic-bezier(0.35, 0, 0.25, 1); }
-  .przejscie.gora.odkryj .pas { transform: translateY(110vh); }
-  .przejscie.dol.odkryj .pas { transform: translateY(-110vh); }
+  /* Przejście na strych: rusza się tylko jedna warstwa wielkości ekranu (bez przesuwania całej strony) */
+  .przejscie { position: fixed; inset: 0; z-index: 200; overflow: hidden; opacity: 0; transition: opacity 0.35s ease; background: #1C1512; }
+  .przejscie.widac { opacity: 1; }
+  .przejscie.znika { opacity: 0; transition: opacity 0.45s ease; }
+  .przejscie .bujanie { position: absolute; inset: -4%; animation: bujanie 0.38s ease-in-out infinite alternate; will-change: transform; }
+  @keyframes bujanie { from { transform: translateY(-1.2%); } to { transform: translateY(1.2%); } }
+  .przejscie .scena { position: absolute; inset: 0; width: 100%; height: 100%; will-change: transform; transform-origin: 50% 19%; animation: kamera 1.6s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+  .przejscie.dol .scena { transform-origin: 50% 81%; animation-name: kameraDol; }
+  @keyframes kamera { from { transform: scale(1); } to { transform: scale(2.1); } }
+  @keyframes kameraDol { from { transform: scaleY(-1) scale(1); } to { transform: scaleY(-1) scale(2.1); } }
   .przejscie-tekst {
-    position: absolute; left: 0; right: 0; top: 44%; margin: 0; padding: 0 16px; text-align: center; font-family: var(--odr); font-size: 32px; font-weight: 700;
-    color: #F3E6D3; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); opacity: 0; transition: opacity 0.35s 0.25s;
+    position: absolute; left: 0; right: 0; bottom: 14%; margin: 0; padding: 0 16px; text-align: center; font-family: var(--odr);
+    font-size: 30px; font-weight: 700; color: #F3E6D3; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); opacity: 0; transition: opacity 0.4s 0.25s;
   }
-  .przejscie.dol .przejscie-tekst { color: #5A4331; text-shadow: none; }
-  .przejscie.zakryj .przejscie-tekst { opacity: 1; }
-  .przejscie.odkryj .przejscie-tekst { opacity: 0; transition-delay: 0s; transition-duration: 0.25s; }
-  #app.odjazd-dol, #app.odjazd-gora { transition: transform 0.7s cubic-bezier(0.55, 0, 0.75, 0.2), opacity 0.7s; opacity: 0.25; }
-  #app.odjazd-dol { transform: translateY(22vh); }
-  #app.odjazd-gora { transform: translateY(-22vh); }
-  #app.przyjazd-gora { animation: przyjazdGora 1s cubic-bezier(0.35, 0, 0.25, 1) both; }
-  #app.przyjazd-dol { animation: przyjazdDol 1s cubic-bezier(0.35, 0, 0.25, 1) both; }
-  @keyframes przyjazdGora { from { transform: translateY(-22vh); opacity: 0; } to { transform: none; opacity: 1; } }
-  @keyframes przyjazdDol { from { transform: translateY(22vh); opacity: 0; } to { transform: none; opacity: 1; } }
+  .przejscie.widac .przejscie-tekst { opacity: 1; }
   @media (prefers-reduced-motion: reduce) {
     body::before, body::after, .wejdz, .logowanie > *, .skan > *, .czekanie > *, .karta.swieza, .litera.nowa, .skrzynia, .kot svg, .kot .otwarte, .pajeczyna { animation: none !important; }
     .czeka { opacity: 1; transform: none; }
@@ -677,20 +653,16 @@ function osadzFilm(link) {
   return `<a class="przycisk strych-link" href="${esc(u.href)}" target="_blank" rel="noopener">Otwórz</a>`;
 }
 
-async function widokStrychu(gotowe) {
+function widokStrychu(lista, laduje = false, blad = false) {
   document.body.classList.add('na-strychu');
-  let lista = gotowe || [];
-  if (!gotowe) {
-    $app.innerHTML = '<div class="ladowanie strych-ladowanie">Wchodzę po schodach…</div>';
-    try { lista = await api.strych(); } catch (e) { console.warn(e); }
-  }
+  lista = lista || [];
   const pyl = Array.from({ length: 14 }, () => `<span class="pylek" style="left:${Math.random() * 100}%;animation-delay:${(Math.random() * 8).toFixed(1)}s;animation-duration:${(7 + Math.random() * 6).toFixed(1)}s"></span>`).join('');
   const karty = lista.length ? lista.map((x, i) => `
       <article class="skrzynia" style="--d:${250 + i * 140}ms">
         ${x.tytul ? `<h3>${esc(x.tytul)}</h3>` : ''}
         ${x.tresc ? `<p class="tresc">${esc(x.tresc)}</p>` : ''}
         ${x.rodzaj === 'film' && x.link ? osadzFilm(x.link) : ''}
-      </article>`).join('') : '<p class="strych-pusto">Na razie pusto. Ktoś jeszcze nie zdążył tu niczego schować :)</p>';
+      </article>`).join('') : `<p class="strych-pusto">${laduje ? 'Wnoszę pudła na górę…' : (blad ? 'Coś się zacięło na schodach. Zejdź i wejdź jeszcze raz.' : 'Na razie pusto. Ktoś jeszcze nie zdążył tu niczego schować :)')}</p>`;
   $app.innerHTML = `
     <div class="pyl" aria-hidden="true">${pyl}</div>
     <main class="strych">
@@ -711,39 +683,76 @@ function zejdzZeStrychu() {
     window.scrollTo(0, 0);
   });
 }
+// Zawartość strychu pobieramy w tle i trzymamy w pamięci, żeby animacja nigdy nie czekała na internet.
+let strychDane = null, strychObietnica = null;
+function pobierzStrych() {
+  if (!strychObietnica) {
+    strychObietnica = api.strych()
+      .then((l) => { strychDane = l || []; return strychDane; })
+      .catch((e) => { console.warn('strych:', e); strychObietnica = null; return null; });
+  }
+  return strychObietnica;
+}
 function wejdzNaStrych() {
-  const dane = api.strych().catch((e) => { console.warn(e); return []; });
-  return schody('gora', async () => widokStrychu(await dane));
+  const p = pobierzStrych();
+  return schody('gora', async () => {
+    widokStrychu(strychDane || [], !strychDane);
+    if (!strychDane) {
+      p.then((l) => {
+        if (!document.body.classList.contains('na-strychu')) return;
+        widokStrychu(l || [], false, l === null);
+      });
+    }
+  });
 }
 
 const malyRuch = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let wTrakcieSchodow = false;
+function rysujSchody(dol) {
+  // Schody w perspektywie: im dalej, tym węższe i ciemniejsze stopnie; na końcu świeci właz.
+  const vx = 200, vy = 150, hw = (y) => 18 + (y - vy) * 0.46;
+  const swiatlo = dol ? '#FFF6E6' : '#F2D29B';
+  let stopnie = '', y = 800, h = 120;
+  for (let i = 0; i < 16 && y > vy + 4; i++) {
+    const yG = Math.max(vy + 2, y - h), yS = yG + (y - yG) * 0.32;
+    const jasnosc = 1 - i / 18;
+    const kol = (r, g, b) => `rgb(${Math.round(r * jasnosc)},${Math.round(g * jasnosc)},${Math.round(b * jasnosc)})`;
+    stopnie += `<polygon points="${vx - hw(y)},${y} ${vx + hw(y)},${y} ${vx + hw(yS)},${yS} ${vx - hw(yS)},${yS}" fill="${kol(122, 91, 64)}"/>`;
+    stopnie += `<polygon points="${vx - hw(yS)},${yS} ${vx + hw(yS)},${yS} ${vx + hw(yG)},${yG} ${vx - hw(yG)},${yG}" fill="${kol(84, 62, 45)}"/>`;
+    y = yG; h *= 0.8;
+  }
+  return `<svg class="scena" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><radialGradient id="blask" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="${swiatlo}" stop-opacity="0.9"/><stop offset="1" stop-color="${swiatlo}" stop-opacity="0"/></radialGradient></defs>
+    <rect width="400" height="800" fill="#1C1512"/>
+    <polygon points="0,0 ${vx - 18},${vy} ${vx - hw(800)},800 0,800" fill="#2A201A"/>
+    <polygon points="400,0 ${vx + 18},${vy} ${vx + hw(800)},800 400,800" fill="#241B16"/>
+    <polygon points="0,0 400,0 ${vx + 18},${vy} ${vx - 18},${vy}" fill="#16110E"/>
+    <ellipse cx="${vx}" cy="${vy - 6}" rx="90" ry="70" fill="url(#blask)"/>
+    <rect x="${vx - 18}" y="${vy - 44}" width="36" height="46" rx="2" fill="${swiatlo}"/>
+    ${stopnie}
+  </svg>`;
+}
 async function schody(kierunek, potem) {
   if (wTrakcieSchodow) return;
+  // schowaj klawiaturę i odczekaj, aż telefon skończy zmieniać wysokość ekranu
+  if (document.activeElement && document.activeElement.blur) { const bylo = document.activeElement.tagName === 'INPUT'; document.activeElement.blur(); if (bylo) await czekaj(320); }
   if (malyRuch()) { await potem(); return; }
   wTrakcieSchodow = true;
-  const gora = kierunek === 'gora';
+  const dol = kierunek === 'dol';
   const o = document.createElement('div');
   o.className = `przejscie ${kierunek}`;
   o.setAttribute('aria-hidden', 'true');
-  o.innerHTML = `<div class="pas"></div><p class="przejscie-tekst">${gora ? 'tup… tup… skrzyp…' : 'tup… tup… tup…'}</p>`;
+  o.innerHTML = `<div class="bujanie">${rysujSchody(dol)}</div><p class="przejscie-tekst">${dol ? 'tup… tup… tup…' : 'tup… tup… skrzyp…'}</p>`;
   document.body.append(o);
   void o.offsetWidth;
-  // 1. stara strona odjeżdża, stopnie nadjeżdżają i zakrywają ekran
-  $app.classList.add(gora ? 'odjazd-dol' : 'odjazd-gora');
-  o.classList.add('zakryj');
-  await czekaj(720);
-  // 2. pod zasłoną podmieniamy zawartość
-  $app.classList.remove('odjazd-dol', 'odjazd-gora');
+  o.classList.add('widac');
+  await czekaj(800);
   try { await potem(); } catch (e) { console.warn(e); }
   window.scrollTo(0, 0);
-  // 3. stopnie odjeżdżają dalej, nowa strona wjeżdża
-  void $app.offsetWidth;
-  $app.classList.add(gora ? 'przyjazd-gora' : 'przyjazd-dol');
-  o.classList.add('odkryj');
-  await czekaj(1020);
+  await czekaj(380);
+  o.classList.add('znika');
+  await czekaj(470);
   o.remove();
-  $app.classList.remove('przyjazd-gora', 'przyjazd-dol');
   wTrakcieSchodow = false;
 }
 
@@ -1058,6 +1067,7 @@ async function startGry(przewin = true, poSkanie = false) {
   if (poSkanie) await odliczStart();
   widokGry();
   sprawdzNoc();
+  if (st.strych) pobierzStrych();
   if (przewin) {
     const cel = st.zagadki.find((z) => !z.zablokowana && !zrobiona(z.nr));
     if (cel) document.getElementById(`z${cel.nr}`)?.scrollIntoView({ block: 'start' });
