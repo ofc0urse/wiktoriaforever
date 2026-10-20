@@ -139,7 +139,7 @@
     <h2 id="h-postep">Postęp gracza</h2>
     <div class="wiersz">
       <button class="przycisk drugi" type="button" id="postep-odswiez" disabled>Pokaż postęp</button>
-      <button class="przycisk grozny" type="button" id="postep-czysc" disabled>Wyczyść postęp (po testach)</button>
+      <button class="przycisk grozny" type="button" id="postep-czysc" disabled>Wyczyść postęp, podpisy i zdjęcia (po testach)</button>
     </div>
     <div id="postep"></div>
   </section>
@@ -452,13 +452,14 @@ $('postep-odswiez').onclick = async () => {
 let potwierdz = false;
 $('postep-czysc').onclick = async () => {
   if (!potwierdz) { potwierdz = true; $('postep-czysc').textContent = 'Na pewno? Kliknij jeszcze raz'; return; }
-  potwierdz = false; $('postep-czysc').textContent = 'Wyczyść postęp (po testach)';
+  potwierdz = false; $('postep-czysc').textContent = 'Wyczyść postęp, podpisy i zdjęcia (po testach)';
   try {
     const s = await F.getDocs(F.collection(db, 'postep'));
     await Promise.all(s.docs.map((doc) => F.deleteDoc(doc.ref)));
     // podpisy też (łącznie z podpisem z pierwszego logowania), żeby test zaczynał się od zera
     try { const p = await F.getDocs(F.collection(db, 'podpisy')); await Promise.all(p.docs.map((doc) => F.deleteDoc(doc.ref))); } catch (e) { console.warn(e); }
-    $('postep').innerHTML = '<p class="ok">Postęp i podpisy wyczyszczone. Gracz zaczyna od zera: na telefonie wyloguj się i zaloguj ponownie (wtedy znów będzie podpis i skan twarzy).</p>';
+    try { const z = await F.getDocs(F.collection(db, 'zdjecia')); await Promise.all(z.docs.map((doc) => F.deleteDoc(doc.ref))); } catch (e) { console.warn(e); }
+    $('postep').innerHTML = '<p class="ok">Postęp, podpisy i zdjęcia wyczyszczone. Gracz zaczyna od zera: na telefonie wyloguj się i zaloguj ponownie (wtedy znów będzie podpis i skan twarzy).</p>';
   } catch (e) { $('postep').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}</p>`; }
 };
 
