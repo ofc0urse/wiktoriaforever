@@ -226,11 +226,11 @@
   .osiagniecie-popup b { display: block; font-size: 16px; }
   @keyframes popup { 0% { opacity: 0; transform: translate(-50%, -20px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
   .stopka-prawa { display: flex; align-items: center; gap: 10px; }
-  .jajko-btn { position: absolute; z-index: 5; top: -14px; left: 0; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #E2C46B; background: #FFF4D6; color: #C79A2B; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; animation: jajkoKiwa 4s ease-in-out infinite; }
+  .jajko-btn { position: absolute; z-index: 5; top: -16px; left: 2px; width: 44px; height: 52px; border: 0; background: none; cursor: pointer; padding: 0; transform-origin: 50% 90%; animation: jajkoKiwa 4s ease-in-out infinite; filter: drop-shadow(0 3px 4px rgba(42, 36, 34, 0.18)); -webkit-tap-highlight-color: transparent; }
+  .jajko-btn svg { width: 100%; height: 100%; display: block; }
   @keyframes jajkoKiwa { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-12deg); } 90% { transform: rotate(10deg); } 95% { transform: rotate(-5deg); } }
   .kot.pojawia { animation: kotPojawia 0.9s cubic-bezier(0.2, 1.4, 0.4, 1); }
   @keyframes kotPojawia { from { transform: translateY(40px) scale(0.3); opacity: 0; } to { transform: none; opacity: 1; } }
-  .jajko-btn svg { width: 20px; height: 20px; }
   .podpis-pole { position: relative; width: 100%; height: 150px; border: 2px dashed #8A807C; border-radius: 12px; background: #fff; }
   .podpis-pole canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; border-radius: 12px; }
   .podpis-linia { position: absolute; left: 16px; right: 16px; bottom: 34px; text-align: left; border-bottom: 1.5px solid #CFC6BF; color: #8A807C; font-weight: 800; line-height: 1; pointer-events: none; padding-bottom: 2px; }
@@ -744,6 +744,19 @@ const IKONY = {
   pytajnik: '<path d="M8.5 8.5a3.5 3.5 0 1 1 5 3.2c-1 .5-1.5 1.2-1.5 2.3v.8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="19" r="1.6"/>',
   kot: '<path d="M4 4l4 4h8l4-4v9a8 8 0 0 1-16 0z"/>'
 };
+const JAJKO_SVG = `<svg viewBox="0 0 40 50" aria-hidden="true">
+  <defs><clipPath id="jajkoKsztalt"><path d="M20 2C30 2 37 17 37 29a17 17 0 0 1-34 0C3 17 10 2 20 2z"/></clipPath>
+  <radialGradient id="jajkoBlask" cx="35%" cy="28%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity="0.7"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+  <g clip-path="url(#jajkoKsztalt)">
+    <rect width="40" height="50" fill="#F6D8DC"/>
+    <rect y="17" width="40" height="7" fill="#BFE0C8"/>
+    <path d="M0 28l5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4v4l-5 4-5-4-5 4-5-4-5 4-5-4-5 4-5-4z" fill="#F2C14E"/>
+    <rect y="38" width="40" height="5" fill="#BFD4F0"/>
+    <circle cx="11" cy="12" r="1.6" fill="#B8324F" opacity="0.6"/><circle cx="28" cy="10" r="1.4" fill="#2F6B3A" opacity="0.5"/><circle cx="20" cy="45" r="1.5" fill="#B8324F" opacity="0.5"/>
+    <rect width="40" height="50" fill="url(#jajkoBlask)"/>
+  </g>
+  <path d="M20 2C30 2 37 17 37 29a17 17 0 0 1-34 0C3 17 10 2 20 2z" fill="none" stroke="#C79A2B" stroke-width="1.4" opacity="0.6"/>
+</svg>`;
 const ikona = (n) => `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${IKONY[n] || IKONY.gwiazda}</svg>`;
 const OSIAGNIECIA = [
   { id: 'sekrety', nazwa: 'Łowczyni sekretów', opis: 'Znalazłaś tę gablotę.', ikona: 'jajko' },
@@ -1217,7 +1230,7 @@ function widokGry() {
     ${st.blad ? `<p class="blad-ogolny" role="alert">${esc(st.blad)}</p>` : ''}
     <header class="naglowek${st.strych || zdobyte.sekrety ? ' z-pajakiem' : ''}">
       ${st.strych ? pajakHTML() : ''}
-      ${zdobyte.sekrety ? `<button class="jajko-btn" type="button" data-a="sekrety" aria-label="Sekrety">${ikona('jajko')}</button>` : ''}
+      ${zdobyte.sekrety ? `<button class="jajko-btn" type="button" data-a="sekrety" aria-label="Sekrety">${JAJKO_SVG}</button>` : ''}
       <div class="tytul-rzad"><div><p class="mala" data-sekret>Hejj :)</p><h1>Twoje łamigłówki</h1></div>${kotHTML()}</div>
       <div class="liczniki">
         <div class="licznik"><span>Podpowiedzi</span>${kropki(st.postep.podpowiedzi.length)}</div>
