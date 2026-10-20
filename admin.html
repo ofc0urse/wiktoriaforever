@@ -141,6 +141,12 @@
     <div id="podpisy" class="zdjecia"></div>
   </section>
 
+  <section class="blok" aria-labelledby="h-rys">
+    <h2 id="h-rys">Rysunki od niej (Plastyka)</h2>
+    <div class="wiersz"><button class="przycisk drugi" type="button" id="rys-pokaz" disabled>Pokaż rysunki</button></div>
+    <div id="rysunki" class="zdjecia"></div>
+  </section>
+
   <section class="blok" aria-labelledby="h-zdj">
     <h2 id="h-zdj">Zdjęcia ze skanu twarzy</h2>
     <div class="wiersz"><button class="przycisk drugi" type="button" id="zdj-pokaz" disabled>Pokaż zdjęcia</button></div>
@@ -151,7 +157,7 @@
     <h2 id="h-postep">Postęp gracza</h2>
     <div class="wiersz">
       <button class="przycisk drugi" type="button" id="postep-odswiez" disabled>Pokaż postęp</button>
-      <button class="przycisk grozny" type="button" id="postep-czysc" disabled>Wyczyść postęp, podpisy i zdjęcia (po testach)</button>
+      <button class="przycisk grozny" type="button" id="postep-czysc" disabled>Wyczyść postęp, podpisy, zdjęcia i rysunki (po testach)</button>
     </div>
     <div id="postep"></div>
   </section>
@@ -274,6 +280,7 @@ function odswiezPrzyciski() {
   $('postep-odswiez').disabled = !admin;
   $('postep-czysc').disabled = !admin;
   $('zdj-pokaz').disabled = !admin;
+  $('rys-pokaz').disabled = !admin;
   $('podp-pokaz').disabled = !admin;
   ['odbl-wczytaj', 'odbl-zablokuj-wszystkie', 'odbl-plan-wszystkie'].forEach((id) => { $(id).disabled = !admin; });
   $('zab-wgraj').disabled = !(admin && zabDane);
@@ -464,6 +471,20 @@ $('podp-pokaz').onclick = async () => {
   } catch (e) { $('podpisy').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}. Czy wkleiłeś nowe reguły?</p>`; }
 };
 
+/* ---------- Rysunki ---------- */
+$('rys-pokaz').onclick = async () => {
+  try {
+    const s = await F.getDocs(F.query(F.collection(db, 'rysunki'), F.orderBy('kiedy', 'desc')));
+    if (s.empty) { $('rysunki').innerHTML = '<p class="info">Jeszcze nic nie narysowała.</p>'; return; }
+    $('rysunki').innerHTML = s.docs.map((d, i) => {
+      const r = d.data();
+      if (typeof r.obraz !== 'string' || !r.obraz.startsWith('data:image/jpeg;base64,')) return '';
+      const kiedy = r.kiedy ? fmt(r.kiedy.toMillis()) : '';
+      return `<figure><img src="${r.obraz}" alt="Rysunek ${i + 1}" style="object-fit:contain;background:#fff"><figcaption>${r.wiadomosc ? `<b>${esc(r.wiadomosc)}</b><br>` : ''}${esc(kiedy)} · <a href="${r.obraz}" download="rysunek-${i + 1}.jpg">Pobierz</a></figcaption></figure>`;
+    }).join('');
+  } catch (e) { $('rysunki').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}. Czy wkleiłeś nowe reguły?</p>`; }
+};
+
 /* ---------- Zdjęcia ---------- */
 $('zdj-pokaz').onclick = async () => {
   try {
@@ -529,14 +550,15 @@ $('postep-odswiez').onclick = async () => {
 let potwierdz = false;
 $('postep-czysc').onclick = async () => {
   if (!potwierdz) { potwierdz = true; $('postep-czysc').textContent = 'Na pewno? Kliknij jeszcze raz'; return; }
-  potwierdz = false; $('postep-czysc').textContent = 'Wyczyść postęp, podpisy i zdjęcia (po testach)';
+  potwierdz = false; $('postep-czysc').textContent = 'Wyczyść postęp, podpisy, zdjęcia i rysunki (po testach)';
   try {
     const s = await F.getDocs(F.collection(db, 'postep'));
     await Promise.all(s.docs.map((doc) => F.deleteDoc(doc.ref)));
     // podpisy też (łącznie z podpisem z pierwszego logowania), żeby test zaczynał się od zera
     try { const p = await F.getDocs(F.collection(db, 'podpisy')); await Promise.all(p.docs.map((doc) => F.deleteDoc(doc.ref))); } catch (e) { console.warn(e); }
     try { const z = await F.getDocs(F.collection(db, 'zdjecia')); await Promise.all(z.docs.map((doc) => F.deleteDoc(doc.ref))); } catch (e) { console.warn(e); }
-    $('postep').innerHTML = '<p class="ok">Postęp, podpisy i zdjęcia wyczyszczone. Gracz zaczyna od zera: na telefonie wyloguj się i zaloguj ponownie (wtedy znów będzie podpis i skan twarzy).</p>';
+    try { const r = await F.getDocs(F.collection(db, 'rysunki')); await Promise.all(r.docs.map((doc) => F.deleteDoc(doc.ref))); } catch (e) { console.warn(e); }
+    $('postep').innerHTML = '<p class="ok">Postęp, podpisy, zdjęcia i rysunki wyczyszczone. Gracz zaczyna od zera: na telefonie wyloguj się i zaloguj ponownie (wtedy znów będzie podpis i skan twarzy).</p>';
   } catch (e) { $('postep').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}</p>`; }
 };
 

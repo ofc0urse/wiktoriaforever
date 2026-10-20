@@ -80,6 +80,19 @@ service cloud.firestore {
       allow delete: if admin();
     }
 
+    // Plastyka: rysunki z wiadomością, które ona wysyła. Ona widzi swoje, usuwać może tylko admin.
+    match /rysunki/{id} {
+      allow create: if gracz()
+        && request.resource.data.keys().hasOnly(['obraz', 'wiadomosc', 'kiedy'])
+        && request.resource.data.obraz is string
+        && request.resource.data.obraz.size() < 900000
+        && request.resource.data.wiadomosc is string
+        && request.resource.data.wiadomosc.size() <= 500
+        && request.resource.data.kiedy == request.time;
+      allow read: if gracz() || admin();
+      allow delete: if admin();
+    }
+
     match /postep/{uid} {
       allow read: if admin() || (gracz() && request.auth.uid == uid);
       allow create: if gracz() && request.auth.uid == uid && poprawnyPostep(request.resource.data);

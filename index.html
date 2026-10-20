@@ -343,6 +343,31 @@
   .podpis-start .podpis-pole, .podpis-start .podpis-narzedzia { max-width: 420px; }
   .podpis-narzedzia { width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
   .podpis-grupa { display: flex; gap: 6px; align-items: center; }
+  .gra-ikona.plastyka { background: #E4DBF3; color: #7B4BB7; }
+  .gra-ikona.plastyka svg { width: 30px; height: 30px; fill: currentColor; }
+  .plastyka { gap: 12px; }
+  .plastyka button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .rysunek-kolory { display: flex; flex-wrap: wrap; gap: 8px; }
+  .rysunek-kolory .kolor { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1.5px #CFC6BF; cursor: pointer; padding: 0; transition: transform 0.15s; }
+  .rysunek-kolory .kolor.wybrany { box-shadow: 0 0 0 2.5px var(--tusz); transform: scale(1.12); }
+  .rysunek-kolory .gumka { background: #fff; display: inline-flex; align-items: center; justify-content: center; }
+  .rysunek-kolory .gumka svg { width: 20px; height: 20px; }
+  .rysunek-pole { position: relative; width: 100%; aspect-ratio: 1; max-height: 62vh; border: 2px solid #CFC6BF; border-radius: 16px; background: #fff; box-shadow: 0 6px 18px rgba(42, 36, 34, 0.08); }
+  .rysunek-pole canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; border-radius: 14px; }
+  .rysunek-pasek { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+  .rysunek-pasek .grubosc { width: 38px; height: 38px; border-radius: 10px; border: 1.5px solid #CFC6BF; background: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .rysunek-pasek .grubosc span { display: block; border-radius: 50%; background: #2A2422; }
+  .rysunek-pasek .grubosc.wybrany { border-color: var(--tusz); border-width: 2.5px; }
+  .rysunek-wiadomosc { width: 100%; resize: vertical; min-height: 84px; font: inherit; }
+  .rysunki-wyslane { margin-top: 18px; }
+  .rysunki-lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .rysunki-lista > p { grid-column: 1 / -1; margin: 0; }
+  .rysunki-lista figure, .rysunek-wyslany { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .rysunki-lista img, .rysunek-wyslany img { width: 100%; border-radius: 12px; border: 1.5px solid #CFC6BF; background: #fff; }
+  .rysunki-lista figcaption { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+  .rysunki-lista small { display: block; opacity: 0.65; font-size: 12px; margin-top: 2px; }
+  .rysunek-wyslany { animation: wejdz 0.5s ease both; }
+  .rysunek-wyslany figcaption { font-size: 17px; text-align: center; overflow-wrap: anywhere; }
   .podpis-narzedzia .kolor { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1.5px #CFC6BF; cursor: pointer; padding: 0; }
   .podpis-narzedzia .kolor.wybrany { box-shadow: 0 0 0 2.5px var(--tusz); transform: scale(1.08); }
   .podpis-narzedzia .grubosc { width: 34px; height: 34px; border-radius: 10px; border: 1.5px solid #CFC6BF; background: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
@@ -514,6 +539,7 @@
   body.ciemny .pajak .nitka { background: rgba(241, 234, 228, 0.5); }
   body.ciemny .pajak svg circle[fill="#fff"] { fill: #1C1917; }
   body.ciemny .podpis-pole { border-color: #5E5552; }
+  body.ciemny .rysunek-pole { border-color: #5E5552; }
   body.ciemny.w-zabawach { background: #241B1E; }
   body.ciemny .utwor { border-color: #3D3633; }
   body.ciemny .utwor.wybrany, body.ciemny .strzalki button { background: #2C2124; }
@@ -860,6 +886,8 @@ function demoApi() {
     },
     async nagroda(nr) { const x = z(nr); return { wiadomosc: x.wiadomosc || '', litera: x.litera || '' }; },
     async zapiszZdjecie() { /* demo: nigdzie nie wysyłamy */ },
+    async wyslijRysunek(obraz, wiadomosc) { pam.rysunki = [{ obraz, wiadomosc, kiedy: Date.now() }, ...(pam.rysunki || [])].slice(0, 4); zapisz(); },
+    async rysunki() { return (pam.rysunki || []).slice(); },
     async podpisy() { return { ...(pam.podpisy || {}) }; },
     async zabawy() {
       try { const t = localStorage.getItem('zostaw-zabawy-demo'); if (t) return JSON.parse(t); } catch (e) { /* nic */ }
@@ -905,6 +933,11 @@ async function firebaseApi() {
     // Firebase wymaga min. 6 znaków, więc do wpisanego hasła doklejamy stałą końcówkę.
     async zaloguj(haslo) { await A.signInWithEmailAndPassword(auth, CFG.graczEmail, hasloFirebase(haslo)); },
     async zapiszZdjecie(obraz) { await F.addDoc(F.collection(db, 'zdjecia'), { obraz, kiedy: F.serverTimestamp() }); },
+    async wyslijRysunek(obraz, wiadomosc) { await F.addDoc(F.collection(db, 'rysunki'), { obraz, wiadomosc, kiedy: F.serverTimestamp() }); },
+    async rysunki() {
+      const s = await F.getDocs(F.query(F.collection(db, 'rysunki'), F.orderBy('kiedy', 'desc'), F.limit(12)));
+      return s.docs.map((d) => { const x = d.data(); return { obraz: x.obraz, wiadomosc: x.wiadomosc || '', kiedy: x.kiedy ? x.kiedy.toMillis() : Date.now() }; });
+    },
     async zabawy() {
       const s = await F.getDoc(F.doc(db, 'ustawienia', 'zabawy'));
       return s.exists() ? s.data() : null;
@@ -1000,7 +1033,8 @@ const IKONY = {
   pinezka: '<path d="M12 22s-7-7.2-7-12.5a7 7 0 0 1 14 0C19 14.8 12 22 12 22z"/><circle cx="12" cy="9.5" r="2.6" fill="#1B1A2E"/>',
   oko: '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3.4" fill="#1B1A2E"/>',
   pytajnik: '<path d="M8.5 8.5a3.5 3.5 0 1 1 5 3.2c-1 .5-1.5 1.2-1.5 2.3v.8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="19" r="1.6"/>',
-  kot: '<path d="M4 4l4 4h8l4-4v9a8 8 0 0 1-16 0z"/>'
+  kot: '<path d="M4 4l4 4h8l4-4v9a8 8 0 0 1-16 0z"/>',
+  pedzel: '<path d="M20.5 2.5c-2.8 1.2-8.4 6-10.4 8.6l2.8 2.8c2.6-2 7.4-7.6 8.6-10.4z"/><path d="M8.6 12.6c-2.4.2-3.6 1.8-3.8 3.8-.2 1.6-1.2 2.8-2.8 3.2 3.6 1.6 8.4.8 9.4-3.2z"/>'
 };
 const JAJKO_SVG = `<svg viewBox="0 0 40 50" aria-hidden="true">
   <defs><clipPath id="jajkoKsztalt"><path d="M20 2C30 2 37 17 37 29a17 17 0 0 1-34 0C3 17 10 2 20 2z"/></clipPath>
@@ -1049,6 +1083,7 @@ const OSIAGNIECIA = [
   { id: 'quiz-max', nazwa: 'Znasz mnie na wylot', opis: 'Quiz o mnie bez błędu.', ikona: 'serce' },
   { id: 'pf-max', nazwa: 'Wykrywacz kłamstw', opis: 'Prawda czy fałsz bez błędu.', ikona: 'oko' },
   { id: 'topka-max', nazwa: 'Słuchasz ze mną', opis: 'Ułożona topka bez pomyłki.', ikona: 'nuta' },
+  { id: 'rysunek', nazwa: 'Artystka', opis: 'Wysłałaś mi swój rysunek.', ikona: 'pedzel' },
   { id: 'final', nazwa: 'Kocham Cię', opis: 'Rozwiązałaś finał.', ikona: 'serce' }
 ];
 const SLOWA_SEKRETOW = ['EASTEREGG', 'EASTEREGGI', 'EASTEREGGS', 'EASTEREGGSY', 'JAJKA', 'JAJKO', 'SEKRET', 'SEKRETY', 'OSIAGNIECIA', 'ACHIEVEMENT', 'ACHIEVEMENTY', 'ACHIEVEMENTS', 'ACZIWMENTY'];
@@ -1213,6 +1248,10 @@ function widokZabaw() {
         <span class="gra-ikona pf">P/F</span>
         <span><b>Prawda czy fałsz</b><small>${d.prawdaFalsz.length} zdań${czytaj('zostaw-pf-rekord', null) !== null ? ` · najlepiej ${czytaj('zostaw-pf-rekord', null)}/${d.prawdaFalsz.length}` : ''}</small></span>
       </button>` : ''}
+      <button class="gra-karta" type="button" data-a="plastyka" style="animation-delay:0.1s">
+        <span class="gra-ikona plastyka">${ikona('pedzel')}</span>
+        <span><b>Plastyka</b><small>Narysuj mi coś i wyślij z wiadomością</small></span>
+      </button>
       ${topki ? `<h2>Ułóż moje topki</h2><p class="zabawy-opis">Zgadnij, czego słuchałem najwięcej, i ułóż to w kolejności.</p><div class="topki">${topki}</div>` : ''}`;
   }
   $app.innerHTML = `
@@ -1464,7 +1503,7 @@ function podepnijPodpisy() {
     c.addEventListener('pointerdown', (e) => {
       const p = pkt(e);
       kreska = { kolor: c._kolor, g: c._g, pts: [p] };
-      c._kreski.push(kreska);
+      c._kreski.push(kreska); c._kosz = null;
       const blad = document.getElementById(`podpis-blad-${c.dataset.podpis}`); if (blad) blad.textContent = '';
       try { c.setPointerCapture(e.pointerId); } catch (er) { /* nic */ }
       ctx.fillStyle = kreska.kolor; ctx.beginPath(); ctx.arc(p[0], p[1], kreska.g / 2, 0, Math.PI * 2); ctx.fill();
@@ -1483,8 +1522,12 @@ function podepnijPodpisy() {
   });
 }
 const plotnoPodpisu = (id) => document.querySelector(`canvas[data-podpis="${id}"]`);
-function wyczyscPodpis(id) { const c = plotnoPodpisu(id); if (!c) return; c._kreski = []; rysujPodpis(c); }
-function cofnijPodpis(id) { const c = plotnoPodpisu(id); if (!c || !c._kreski.length) return; c._kreski.pop(); rysujPodpis(c); }
+function wyczyscPodpis(id) { const c = plotnoPodpisu(id); if (!c) return; if (c._kreski.length) c._kosz = c._kreski; c._kreski = []; rysujPodpis(c); }
+function cofnijPodpis(id) {
+  const c = plotnoPodpisu(id); if (!c) return;
+  if (!c._kreski.length) { if (c._kosz) { c._kreski = c._kosz; c._kosz = null; rysujPodpis(c); } return; } // cofnięcie „Wyczyść”
+  c._kreski.pop(); rysujPodpis(c);
+}
 function ustawPodpis(btn, co) {
   const c = plotnoPodpisu(btn.dataset.id); if (!c) return;
   if (co === 'kolor') c._kolor = btn.dataset.kolor; else c._g = Number(btn.dataset.g);
@@ -1497,6 +1540,87 @@ function obrazPodpisu(id) {
   m.width = 420; m.height = Math.round(420 * c.height / c.width);
   m.getContext('2d').drawImage(c, 0, 0, m.width, m.height);
   return m.toDataURL('image/png');
+}
+
+/* ---------- plastyka: rysunki dla mnie ---------- */
+const KOLORY_RYSUNKU = [['#2A2422', 'czarny'], ['#8A807C', 'szary'], ['#7A4A2A', 'brązowy'], ['#D93A3A', 'czerwony'], ['#F28C28', 'pomarańczowy'], ['#F5C518', 'żółty'], ['#2F6B3A', 'zielony'], ['#7CC46A', 'jasnozielony'], ['#1D4E89', 'niebieski'], ['#6FB7E9', 'błękitny'], ['#7B4BB7', 'fioletowy'], ['#E85A9A', 'różowy'], ['#D98A96', 'pudrowy róż'], ['#F3D2C1', 'beżowy']];
+const GRUBOSCI_RYSUNKU = [[2, 'cienka'], [4.5, 'średnia'], [9, 'gruba'], [16, 'bardzo gruba']];
+const GUMKA = '#FFFFFF';
+function widokPlastyki() {
+  zab.tryb = 'plastyka';
+  const kolory = KOLORY_RYSUNKU.map(([k, n], i) => `<button class="kolor${i === 0 ? ' wybrany' : ''}" type="button" data-a="podpis-kolor" data-id="rysunek" data-kolor="${k}" aria-label="Kolor ${n}" style="background:${k}"></button>`).join('')
+    + `<button class="kolor gumka" type="button" data-a="podpis-kolor" data-id="rysunek" data-kolor="${GUMKA}" aria-label="Gumka"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l8.5-8.5 6 6L12 20H6z" fill="#F6D8DC" stroke="#2A2422" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.5 8.5L15 5l6 6-3.5 3.5" fill="#fff" stroke="#2A2422" stroke-width="1.6" stroke-linejoin="round"/></svg></button>`;
+  const grubosci = GRUBOSCI_RYSUNKU.map(([g, n], i) => `<button class="grubosc${i === 1 ? ' wybrany' : ''}" type="button" data-a="podpis-grubosc" data-id="rysunek" data-g="${g}" aria-label="Grubość ${n}"><span style="width:${Math.min(22, g + 3)}px;height:${Math.min(22, g + 3)}px"></span></button>`).join('');
+  $app.innerHTML = `
+    <main class="zabawy plastyka">
+      <button class="tekstowy wstecz" type="button" data-a="zabawy-menu">← Zabawy</button>
+      <h1 class="maly-h1">Plastyka</h1>
+      <p class="zabawy-opis">Narysuj mi coś palcem, dopisz wiadomość i wyślij. Każdy rysunek do mnie trafi :)</p>
+      <div class="rysunek-kolory" data-narzedzia="rysunek">${kolory}</div>
+      <div class="rysunek-pole"><canvas data-podpis="rysunek" aria-label="Kartka do rysowania. Rysuj palcem."></canvas></div>
+      <div class="rysunek-pasek">
+        <div class="podpis-grupa rysunek-grubosci">${grubosci}</div>
+        <div class="podpis-grupa">
+          <button class="tekstowy" type="button" data-a="podpis-cofnij" data-id="rysunek">Cofnij</button>
+          <button class="tekstowy" type="button" data-a="podpis-czysc" data-id="rysunek">Wyczyść</button>
+        </div>
+      </div>
+      <label class="ust-etykieta" for="rysunek-wiadomosc">Wiadomość do rysunku</label>
+      <textarea class="pole rysunek-wiadomosc" id="rysunek-wiadomosc" maxlength="500" rows="3" placeholder="Napisz coś do mnie…"></textarea>
+      <button class="przycisk" type="button" data-a="rysunek-wyslij">Wyślij mi</button>
+      <p class="komunikat zle" id="podpis-blad-rysunek" aria-live="polite"></p>
+      <section class="rysunki-wyslane" aria-labelledby="h-wyslane"><h2 id="h-wyslane">Twoje wysłane rysunki</h2><div id="rysunki-lista" class="rysunki-lista"><p class="zabawy-opis">Wczytuję…</p></div></section>
+    </main>`;
+  podepnijPodpisy();
+  const pl = plotnoPodpisu('rysunek'); if (pl) pl._g = GRUBOSCI_RYSUNKU[1][0];
+  window.scrollTo(0, 0);
+  pokazWyslane();
+}
+async function pokazWyslane() {
+  const el = document.getElementById('rysunki-lista');
+  if (!el) return;
+  try {
+    const l = await api.rysunki();
+    if (!document.getElementById('rysunki-lista')) return;
+    el.innerHTML = l.length
+      ? l.filter((r) => typeof r.obraz === 'string' && r.obraz.startsWith('data:image/')).map((r) => `<figure><img src="${r.obraz}" alt="Twój rysunek"><figcaption>${r.wiadomosc ? esc(r.wiadomosc) : '<i>bez wiadomości</i>'}<small>${esc(new Date(r.kiedy).toLocaleString('pl-PL', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))}</small></figcaption></figure>`).join('')
+      : '<p class="zabawy-opis">Jeszcze nic. Pierwszy rysunek czeka :)</p>';
+  } catch (e) { el.innerHTML = '<p class="zabawy-opis">Nie udało się wczytać rysunków.</p>'; }
+}
+function obrazRysunku() {
+  const c = plotnoPodpisu('rysunek');
+  if (!c || !c._kreski || !c._kreski.some((k) => k.kolor !== GUMKA)) return null;
+  const m = document.createElement('canvas');
+  m.width = 720; m.height = Math.round(720 * c.height / c.width);
+  const ctx = m.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, m.width, m.height);
+  ctx.drawImage(c, 0, 0, m.width, m.height);
+  return m.toDataURL('image/jpeg', 0.85);
+}
+async function wyslijRysunek(btn) {
+  const blad = document.getElementById('podpis-blad-rysunek');
+  const obraz = obrazRysunku();
+  if (!obraz) { blad.textContent = 'Najpierw coś narysuj :)'; return; }
+  const wiadomosc = document.getElementById('rysunek-wiadomosc').value.trim().slice(0, 500);
+  btn.disabled = true; btn.textContent = 'Wysyłam…'; blad.textContent = '';
+  try {
+    await api.wyslijRysunek(obraz, wiadomosc);
+  } catch (e) {
+    console.warn('rysunek:', e);
+    btn.disabled = false; btn.textContent = 'Wyślij mi';
+    blad.textContent = 'Nie udało się wysłać. Sprawdź internet i spróbuj jeszcze raz.';
+    return;
+  }
+  odblokuj('rysunek');
+  deszczSerc(18);
+  $app.innerHTML = `
+    <main class="zabawy plastyka">
+      <h1 class="maly-h1">Wysłane!</h1>
+      <figure class="rysunek-wyslany"><img src="${obraz}" alt="Twój rysunek">${wiadomosc ? `<figcaption>${esc(wiadomosc)}</figcaption>` : ''}</figure>
+      <p class="zabawy-opis">Dziękuję, na pewno mi się spodoba :)</p>
+      <div class="akcje"><button class="przycisk" type="button" data-a="plastyka">Narysuj coś jeszcze</button><button class="tekstowy" type="button" data-a="zabawy-menu">Wróć do zabaw</button></div>
+    </main>`;
+  window.scrollTo(0, 0);
 }
 
 function widokPodpisuStart() {
@@ -2104,6 +2228,8 @@ $app.addEventListener('click', async (ev) => {
   if (a === 'zabawy') { wejdzDoZabaw(); return; }
   if (a === 'z-zabaw') { wyjdzZZabaw(); return; }
   if (a === 'zabawy-menu') { zab.tryb = 'menu'; widokZabaw(); return; }
+  if (a === 'plastyka') { widokPlastyki(); return; }
+  if (a === 'rysunek-wyslij') { wyslijRysunek(b); return; }
   if (a === 'quiz-start') { if (zab.dane) startQuiz(); return; }
   if (a === 'quiz-odp') { if (zab.odp === null) { zab.odp = Number(b.dataset.k); if (zab.odp === zab.runda[zab.i].dobra) zab.wynik += 1; widokQuizu(); } return; }
   if (a === 'quiz-dalej') { zab.i += 1; zab.odp = null; widokQuizu(); window.scrollTo(0, 0); return; }
