@@ -194,6 +194,95 @@
   }
   @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 12px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
   .komunikat.jajko { color: var(--zielen-ciemna); }
+  body.w-zabawach { background: #FFF3F5; }
+  body.w-zabawach::before { display: none; }
+  .zabawy { display: flex; flex-direction: column; gap: 14px; }
+  .zabawy .mala { color: #B8324F; }
+  .zabawy h1 { font-size: 60px; animation: wejdz 0.6s 0.05s both; }
+  .zabawy h1.maly-h1 { font-size: 44px; }
+  .zabawy h2 { margin-top: 10px; }
+  .zabawy-wstep, .zabawy-opis, .zabawy-pusto { margin: 0; color: var(--szary); }
+  .wstecz { align-self: flex-start; }
+  .gra-karta, .topka-karta {
+    display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px; border-radius: 18px; border: 2px solid var(--tusz); background: #fff;
+    text-align: left; cursor: pointer; animation: wejdz 0.5s both; transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .gra-karta:active, .topka-karta:active { transform: scale(0.98); }
+  .gra-karta b, .topka-karta b { display: block; font-size: 19px; }
+  .gra-karta small, .topka-karta small { display: block; color: var(--szary); font-weight: 600; }
+  .gra-karta small.rekord, .topka-karta small.rekord { color: var(--zielen); font-weight: 800; }
+  .gra-ikona { width: 54px; height: 54px; flex: none; border-radius: 16px; background: #F6D8DC; display: flex; align-items: center; justify-content: center; font-family: var(--odr); font-size: 40px; font-weight: 700; color: #B8324F; }
+  .topki { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+  .topka-okladki { display: flex; flex: none; }
+  .topka-okladki img, .topka-okladki .brak-okl { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); background: #E9E1DC; }
+  .topka-okladki > * + * { margin-left: -18px; }
+  .utwory { display: flex; flex-direction: column; gap: 8px; }
+  .utwor {
+    display: grid; grid-template-columns: 40px 52px minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; padding: 8px 12px 8px 8px;
+    border-radius: 14px; border: 2px solid #E6DAD6; background: #fff; text-align: left; cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  }
+  .utwor:active { transform: scale(0.98); }
+  .utwor img, .utwor .brak-okl, .prawdziwa img, .prawdziwa .brak-okl { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; background: #E9E1DC; display: block; }
+  .utwor .nr { font-family: var(--odr); font-size: 28px; font-weight: 700; color: #B8324F; text-align: center; }
+  .utwor.wybrany { border-color: #B8324F; background: #FFF8F9; }
+  .utwor.wybrany .nr { animation: litera 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  .utwor-opis b { display: block; font-size: 16px; line-height: 1.2; overflow-wrap: anywhere; }
+  .utwor-opis small { display: block; color: var(--szary); font-size: 13px; }
+  .utwor.sprawdzony { cursor: default; animation: wejdz 0.4s both; animation-delay: var(--d, 0ms); }
+  .utwor.trafiony { border-color: var(--zielen); background: var(--zielen-tlo); }
+  .utwor.trafiony small { color: var(--zielen); font-weight: 800; }
+  .utwor.pudlo small { color: #B8324F; font-weight: 800; }
+  .topka-akcje { padding-top: 6px; }
+  .wynik-topki { margin: 6px 0 0; font-size: 20px; }
+  .prawdziwa { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .prawdziwa li { display: flex; align-items: center; gap: 12px; }
+  .prawdziwa img, .prawdziwa .brak-okl { width: 40px; height: 40px; }
+  .prawdziwa small { display: block; color: var(--szary); font-size: 13px; }
+  .quiz-licznik { margin: 0; font-weight: 800; color: var(--szary); }
+  .pasek-postepu.jasny { background: #F1E1E4; }
+  .pasek-postepu.jasny span { background: linear-gradient(90deg, #B8324F, #F2C14E); }
+  .quiz-pytanie { font-family: var(--tekst); font-size: 22px; font-weight: 800; line-height: 1.3; animation: wejdz 0.4s both; }
+  .quiz-opcje { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-opcja { min-height: 54px; padding: 12px 16px; border-radius: 14px; border: 2px solid var(--tusz); background: #fff; font-weight: 800; text-align: left; cursor: pointer; transition: transform 0.15s, background 0.2s, border-color 0.2s, opacity 0.2s; animation: wejdz 0.4s both; }
+  .quiz-opcja:nth-child(2) { animation-delay: 0.05s; } .quiz-opcja:nth-child(3) { animation-delay: 0.1s; } .quiz-opcja:nth-child(4) { animation-delay: 0.15s; }
+  .quiz-opcja:active { transform: scale(0.97); }
+  .quiz-opcja.dobra { background: var(--zielen-tlo); border-color: var(--zielen); color: var(--zielen-ciemna); animation: swieza 0.6s; }
+  .quiz-opcja.zla { background: #FBE3E6; border-color: #B8324F; color: #8E2238; animation: trzes 0.4s; }
+  .quiz-opcja.wygaszona { opacity: 0.45; }
+  .quiz-opcja[disabled] { cursor: default; }
+  .quiz-kom { margin: 0; font-weight: 700; animation: wejdz 0.35s both; }
+  .quiz-kom.ok { color: var(--zielen-ciemna); } .quiz-kom.nie { color: #8E2238; }
+  .quiz-koniec { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 20px 0; }
+  .wynik { margin: 0; font-family: var(--odr); font-size: 110px; font-weight: 700; line-height: 1; color: #B8324F; animation: litera 0.8s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  .wynik span { font-size: 54px; color: var(--szary); }
+  .wynik-tekst { margin: 0; font-size: 19px; font-weight: 700; }
+  .nudzisz {
+    display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 34px; padding: 14px 16px; border-radius: 18px; border: 2px dashed #E3A8B3;
+    background: #FFF6F8; color: var(--tusz); font-weight: 800; font-size: 16px; text-align: left; cursor: pointer; transition: transform 0.15s;
+  }
+  .nudzisz:active { transform: scale(0.98); }
+  .nudzisz-pad { width: 52px; height: 38px; flex: none; animation: padKiwa 5s ease-in-out infinite; }
+  .nudzisz-pad svg { width: 100%; height: 100%; display: block; }
+  .czekanie .nudzisz { max-width: 420px; margin-top: 8px; }
+  .gra-ikona.pf { font-family: var(--tekst); font-size: 18px; font-weight: 800; background: #DCEBDF; color: var(--zielen-ciemna); }
+  .utwor { grid-template-columns: 40px 52px minmax(0, 1fr) auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y; cursor: grab; }
+  .utwory.przeciagane .utwor { transition: transform 0.18s ease, box-shadow 0.2s; }
+  .utwory.w-trakcie .utwor.niesiony { transition: box-shadow 0.2s; z-index: 3; position: relative; box-shadow: 0 14px 30px rgba(42, 36, 34, 0.25); border-color: #B8324F; cursor: grabbing; }
+  .strzalki { display: flex; flex-direction: column; gap: 4px; }
+  .strzalki button { width: 34px; height: 26px; border-radius: 8px; border: 1.5px solid #E6DAD6; background: #FFF8F9; color: #B8324F; font-size: 12px; cursor: pointer; padding: 0; }
+  .strzalki button[disabled] { opacity: 0.3; cursor: default; }
+  .ocena { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 16px; align-items: center; width: 100%; padding: 16px; border-radius: 20px; background: #fff; border: 2px solid var(--tusz); animation: wejdz 0.5s both; text-align: left; }
+  .ocena-cyfra { grid-row: span 2; width: 84px; height: 84px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-family: var(--odr); font-size: 72px; font-weight: 700; line-height: 1; color: #fff; background: #B8324F; animation: litera 0.8s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  .ocena.o1 .ocena-cyfra, .ocena.o2 .ocena-cyfra { background: #8E2238; }
+  .ocena.o3 .ocena-cyfra, .ocena.o4 .ocena-cyfra { background: #C79A2B; }
+  .ocena.o5 .ocena-cyfra { background: var(--zielen); }
+  .ocena.o6 .ocena-cyfra { background: linear-gradient(135deg, #B8324F, #F2C14E); }
+  .ocena-tekst { font-size: 20px; font-weight: 800; line-height: 1.2; }
+  .ocena-wynik { color: var(--szary); font-weight: 700; }
+  .pf-przyciski { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pf-przyciski .quiz-opcja { text-align: center; font-size: 18px; min-height: 64px; }
+  .pf-zdanie { font-style: italic; }
+  .zabawy-wyjscie { align-self: flex-start; margin-top: 16px; background: #B8324F; border-color: #B8324F; }
   body.w-sekretach { background: #1B1A2E; color: #EDE9FF; }
   body.w-sekretach::before { display: none; }
   .sekrety { display: flex; flex-direction: column; gap: 14px; }
@@ -226,7 +315,11 @@
   .osiagniecie-popup b { display: block; font-size: 16px; }
   @keyframes popup { 0% { opacity: 0; transform: translate(-50%, -20px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
   .stopka-prawa { display: flex; align-items: center; gap: 10px; }
-  .jajko-btn { position: absolute; z-index: 5; top: -16px; left: 2px; width: 44px; height: 52px; border: 0; background: none; cursor: pointer; padding: 0; transform-origin: 50% 90%; animation: jajkoKiwa 4s ease-in-out infinite; filter: drop-shadow(0 3px 4px rgba(42, 36, 34, 0.18)); -webkit-tap-highlight-color: transparent; }
+  .ikony-gora { position: absolute; z-index: 5; top: -16px; left: 2px; display: flex; align-items: center; gap: 14px; }
+  .pad-btn { width: 56px; height: 44px; border: 0; background: none; padding: 0; cursor: pointer; animation: padKiwa 5s ease-in-out infinite; filter: drop-shadow(0 3px 4px rgba(42, 36, 34, 0.18)); -webkit-tap-highlight-color: transparent; }
+  .pad-btn svg { width: 100%; height: 100%; display: block; }
+  @keyframes padKiwa { 0%, 70%, 100% { transform: none; } 75% { transform: translateY(-4px) rotate(-6deg); } 82% { transform: translateY(0) rotate(4deg); } 88% { transform: rotate(-2deg); } }
+  .jajko-btn { position: relative; width: 44px; height: 52px; border: 0; background: none; cursor: pointer; padding: 0; transform-origin: 50% 90%; animation: jajkoKiwa 4s ease-in-out infinite; filter: drop-shadow(0 3px 4px rgba(42, 36, 34, 0.18)); -webkit-tap-highlight-color: transparent; }
   .jajko-btn svg { width: 100%; height: 100%; display: block; }
   @keyframes jajkoKiwa { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-12deg); } 90% { transform: rotate(10deg); } 95% { transform: rotate(-5deg); } }
   .kot.pojawia { animation: kotPojawia 0.9s cubic-bezier(0.2, 1.4, 0.4, 1); }
@@ -616,6 +709,15 @@ function demoApi() {
     async nagroda(nr) { const x = z(nr); return { wiadomosc: x.wiadomosc || '', litera: x.litera || '' }; },
     async zapiszZdjecie() { /* demo: nigdzie nie wysyłamy */ },
     async podpisy() { return { ...(pam.podpisy || {}) }; },
+    async zabawy() {
+      try { const t = localStorage.getItem('zostaw-zabawy-demo'); if (t) return JSON.parse(t); } catch (e) { /* nic */ }
+      return {
+        quiz: [{ pytanie: 'Przykładowe pytanie: o której się urodziłem?', odpowiedzi: ['19:10', '10:15', '15:10', '21:37'], dobra: 0, komentarz: 'W prawdziwej grze będą tu Twoje pytania.' }],
+        quizKoniec: [{ od: 1, tekst: 'Brawo!' }, { od: 0, tekst: 'Jeszcze raz?' }],
+        topki: [{ id: 'demo', grupa: 'Artyści', okres: 'przykład', pozycje: [{ tytul: 'Chivas', autor: '' }, { tytul: 'bambi', autor: '' }, { tytul: 'Young Multi', autor: '' }] }],
+        okladki: {}
+      };
+    },
     async zapiszPodpis(id, obraz) { pam.podpisy = { ...(pam.podpisy || {}), [id]: obraz }; zapisz(); },
     async strych() {
       return [
@@ -651,6 +753,10 @@ async function firebaseApi() {
     // Firebase wymaga min. 6 znaków, więc do wpisanego hasła doklejamy stałą końcówkę.
     async zaloguj(haslo) { await A.signInWithEmailAndPassword(auth, CFG.graczEmail, hasloFirebase(haslo)); },
     async zapiszZdjecie(obraz) { await F.addDoc(F.collection(db, 'zdjecia'), { obraz, kiedy: F.serverTimestamp() }); },
+    async zabawy() {
+      const s = await F.getDoc(F.doc(db, 'ustawienia', 'zabawy'));
+      return s.exists() ? s.data() : null;
+    },
     async podpisy() {
       const s = await F.getDocs(F.collection(db, 'podpisy'));
       const o = {};
@@ -785,6 +891,10 @@ const OSIAGNIECIA = [
   { id: '67', nazwa: '67', opis: '6… 7…', ikona: 'gwiazda' },
   { id: 'paslek', nazwa: 'Sąsiedztwo', opis: 'Pasłęk, miasto obok Ciebie.', ikona: 'pinezka' },
   { id: 'pomocy', nazwa: 'Pomocy!', opis: 'Poprosiłaś o pomoc zamiast odpowiedzi.', ikona: 'pytajnik' },
+  { id: 'zabawy', nazwa: 'Czas na zabawę', opis: 'Znalazłaś zabawy.', ikona: 'gwiazda' },
+  { id: 'quiz-max', nazwa: 'Znasz mnie na wylot', opis: 'Quiz o mnie bez błędu.', ikona: 'serce' },
+  { id: 'pf-max', nazwa: 'Wykrywacz kłamstw', opis: 'Prawda czy fałsz bez błędu.', ikona: 'oko' },
+  { id: 'topka-max', nazwa: 'Słuchasz ze mną', opis: 'Ułożona topka bez pomyłki.', ikona: 'nuta' },
   { id: 'final', nazwa: 'Kocham Cię', opis: 'Rozwiązałaś finał.', ikona: 'serce' }
 ];
 const SLOWA_SEKRETOW = ['EASTEREGG', 'EASTEREGGI', 'EASTEREGGS', 'EASTEREGGSY', 'JAJKA', 'JAJKO', 'SEKRET', 'SEKRETY', 'OSIAGNIECIA', 'ACHIEVEMENT', 'ACHIEVEMENTY', 'ACHIEVEMENTS', 'ACZIWMENTY'];
@@ -830,6 +940,244 @@ function wyjdzZSekretow() {
     st.bylRender = false;
     widokGry();
   });
+}
+
+/* ---------- Zabawy: quiz i układanie topek ---------- */
+const KOLOR_ZABAWY = '#FFF3F5';
+const SLOWA_ZABAW = ['ZABAWY', 'ZABAWA', 'ZABAWKI', 'GRY', 'GRA', 'GIERKI', 'QUIZ', 'QUIZY', 'KWIZ', 'TOPKI', 'TOPKA', 'MINIGRY'];
+const PAD_SVG = '<svg viewBox="0 0 48 34" aria-hidden="true"><rect x="2" y="4" width="44" height="26" rx="13" fill="#BFD4F0" stroke="#6E8FBF" stroke-width="1.4"/><rect x="9.5" y="15.3" width="11" height="3.6" rx="1.3" fill="#2A2422"/><rect x="13.2" y="11.6" width="3.6" height="11" rx="1.3" fill="#2A2422"/><circle cx="33" cy="13.5" r="2.7" fill="#B8324F"/><circle cx="38.6" cy="18.8" r="2.7" fill="#2F6B3A"/><ellipse cx="14" cy="9" rx="6" ry="2" fill="#fff" opacity="0.5"/></svg>';
+let zabawyOdkryte = false;
+try { zabawyOdkryte = localStorage.getItem('zostaw-zabawy') === '1'; } catch (e) { zabawyOdkryte = false; }
+const zab = { dane: null, obietnica: null, tryb: 'menu' };
+const przyciskNudy = () => `<button class="nudzisz" type="button" data-a="zabawy"><span class="nudzisz-pad">${PAD_SVG}</span><span>Jeżeli się nudzisz, to tutaj możesz się pobawić :3</span></button>`;
+const OCENY_DOMYSLNE = ['Oj oj oj, słabo…', 'Ajj, słaboo', 'Okej, nie najgorzej', 'Coś tam wiesz o mnie, hah', 'Brawo, coś tam jednak wiesz', 'Moja Wiktoria <3 Brawoo'];
+function ocena(w, n) {
+  const proc = n ? w / n : 0;
+  const o = proc >= 1 ? 6 : proc >= 0.8 ? 5 : proc >= 0.6 ? 4 : proc >= 0.4 ? 3 : proc >= 0.2 ? 2 : 1;
+  const teksty = zab.dane && Array.isArray(zab.dane.oceny) && zab.dane.oceny.length === 6 ? zab.dane.oceny : OCENY_DOMYSLNE;
+  return { o, tekst: teksty[o - 1] };
+}
+const ocenaHTML = (w, n) => { const x = ocena(w, n); return `<div class="ocena o${x.o}"><span class="ocena-cyfra">${x.o}</span><span class="ocena-tekst">${esc(x.tekst)}</span><span class="ocena-wynik">${w} z ${n}</span></div>`; };
+const czytaj = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+const pisz = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* trudno */ } };
+function pobierzZabawy() {
+  if (!zab.obietnica) zab.obietnica = api.zabawy().then((d) => { zab.dane = d; return d; }).catch((e) => { console.warn('zabawy:', e); zab.obietnica = null; return null; });
+  return zab.obietnica;
+}
+function wejdzDoZabaw() {
+  const p = pobierzZabawy();
+  const zKoloru = document.body.classList.contains('na-strychu') ? KOLOR_STRYCH : (document.body.classList.contains('w-sekretach') ? KOLOR_SEKRETY : KOLOR_JASNY);
+  return przejscieKolorem(zKoloru, KOLOR_ZABAWY, async () => {
+    document.body.classList.remove('na-strychu', 'w-sekretach');
+    document.body.classList.add('w-zabawach');
+    zabawyOdkryte = true; pisz('zostaw-zabawy', 1); odblokuj('zabawy');
+    zab.tryb = 'menu';
+    widokZabaw();
+    if (!zab.dane) p.then(() => { if (document.body.classList.contains('w-zabawach') && zab.tryb === 'menu') widokZabaw(); });
+  });
+}
+function wyjdzZZabaw() {
+  return przejscieKolorem(KOLOR_ZABAWY, KOLOR_JASNY, async () => {
+    document.body.classList.remove('w-zabawach');
+    st.bylRender = false;
+    widokGry();
+  });
+}
+const okl = (k) => (zab.dane && zab.dane.okladki && typeof zab.dane.okladki[k] === 'string' && zab.dane.okladki[k].startsWith('data:image/') ? zab.dane.okladki[k] : '');
+function widokZabaw() {
+  const d = zab.dane;
+  let srodek;
+  if (!d) {
+    srodek = `<p class="zabawy-pusto">${zab.obietnica ? 'Rozkładam gry…' : 'Zabawy jeszcze się ładują. Wróć za chwilę.'}</p>`;
+  } else {
+    const rekordQuiz = czytaj('zostaw-quiz-rekord', null);
+    const rekordy = czytaj('zostaw-topki-rekordy', {});
+    const topki = (d.topki || []).map((t) => `
+      <button class="topka-karta" type="button" data-a="topka" data-id="${esc(t.id)}">
+        <span class="topka-okladki">${t.pozycje.slice(0, 3).map((x) => (okl(x.okladka) ? `<img src="${okl(x.okladka)}" alt="">` : '<span class="brak-okl"></span>')).join('')}</span>
+        <span class="topka-opis"><b>${esc(t.grupa)}</b><small>${esc(t.okres)}</small>${rekordy[t.id] !== undefined ? `<small class="rekord">Najlepiej: ${rekordy[t.id]}/${t.pozycje.length}</small>` : ''}</span>
+      </button>`).join('');
+    srodek = `
+      ${(d.quiz || []).length ? `<button class="gra-karta" type="button" data-a="quiz-start">
+        <span class="gra-ikona">?</span>
+        <span><b>Quiz o mnie</b><small>${d.quiz.length} pytań${rekordQuiz !== null ? ` · najlepiej ${rekordQuiz}/${d.quiz.length}` : ''}</small></span>
+      </button>` : ''}
+      ${(d.prawdaFalsz || []).length ? `<button class="gra-karta" type="button" data-a="pf-start" style="animation-delay:0.05s">
+        <span class="gra-ikona pf">P/F</span>
+        <span><b>Prawda czy fałsz</b><small>${d.prawdaFalsz.length} zdań${czytaj('zostaw-pf-rekord', null) !== null ? ` · najlepiej ${czytaj('zostaw-pf-rekord', null)}/${d.prawdaFalsz.length}` : ''}</small></span>
+      </button>` : ''}
+      ${topki ? `<h2>Ułóż moje topki</h2><p class="zabawy-opis">Zgadnij, czego słuchałem najwięcej, i ułóż to w kolejności.</p><div class="topki">${topki}</div>` : ''}`;
+  }
+  $app.innerHTML = `
+    <main class="zabawy">
+      <p class="mala">psst…</p>
+      <h1>Zabawy</h1>
+      <p class="zabawy-wstep">Sprawdźmy, jak dobrze mnie znasz :)</p>
+      ${srodek}
+      <button class="przycisk zabawy-wyjscie" type="button" data-a="z-zabaw">Wróć</button>
+    </main>`;
+  window.scrollTo(0, 0);
+}
+
+function startQuiz() { zab.tryb = 'quiz'; zab.i = 0; zab.wynik = 0; zab.odp = null; widokQuizu(); }
+function widokQuizu() {
+  const q = zab.dane.quiz, n = q.length;
+  let tresc;
+  if (zab.i >= n) {
+    const w = zab.wynik;
+    const rekord = czytaj('zostaw-quiz-rekord', null);
+    if (rekord === null || w > rekord) pisz('zostaw-quiz-rekord', w);
+    if (w === n) { odblokuj('quiz-max'); deszczSerc(24); }
+    tresc = `<div class="quiz-koniec">
+        ${ocenaHTML(w, n)}
+        <div class="akcje"><button class="przycisk" type="button" data-a="quiz-start">Jeszcze raz</button><button class="tekstowy" type="button" data-a="zabawy-menu">Wróć do zabaw</button></div>
+      </div>`;
+  } else {
+    const p = q[zab.i];
+    const odp = p.odpowiedzi.map((o, k) => {
+      let kl = '';
+      if (zab.odp !== null) kl = k === p.dobra ? ' dobra' : (k === zab.odp ? ' zla' : ' wygaszona');
+      return `<button class="quiz-opcja${kl}" type="button" data-a="quiz-odp" data-k="${k}"${zab.odp !== null ? ' disabled' : ''}>${esc(o)}</button>`;
+    }).join('');
+    const ok = zab.odp === p.dobra;
+    tresc = `
+      <p class="quiz-licznik">Pytanie ${zab.i + 1} z ${n}</p>
+      <div class="pasek-postepu jasny" aria-hidden="true"><span style="width:${Math.round(zab.i / n * 100)}%"></span></div>
+      <h2 class="quiz-pytanie">${esc(p.pytanie)}</h2>
+      <div class="quiz-opcje">${odp}</div>
+      ${zab.odp !== null ? `<p class="quiz-kom ${ok ? 'ok' : 'nie'}">${ok ? 'Dobrze!' : `Nie, to: <b>${esc(p.odpowiedzi[p.dobra])}</b>.`}${p.komentarz ? ` ${esc(p.komentarz)}` : ''}</p>
+        <button class="przycisk" type="button" data-a="quiz-dalej">${zab.i + 1 < n ? 'Dalej' : 'Wynik'}</button>` : ''}`;
+  }
+  $app.innerHTML = `<main class="zabawy"><button class="tekstowy wstecz" type="button" data-a="zabawy-menu">← Zabawy</button><h1 class="maly-h1">Quiz o mnie</h1>${tresc}</main>`;
+}
+
+function startTopka(id) {
+  const t = (zab.dane.topki || []).find((x) => x.id === id);
+  if (!t) return;
+  zab.tryb = 'topka'; zab.topka = t; zab.sprawdzone = false;
+  const idx = t.pozycje.map((_, i) => i);
+  do { for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; } } while (idx.length > 1 && idx.some((v, i) => v === i) && Math.random() < 0.9);
+  zab.kolejnosc = idx;
+  widokTopki();
+}
+function przesunTopke(z, na) {
+  if (na < 0 || na >= zab.kolejnosc.length || z === na) return;
+  const [k] = zab.kolejnosc.splice(z, 1);
+  zab.kolejnosc.splice(na, 0, k);
+}
+function widokTopki() {
+  const t = zab.topka, n = t.pozycje.length;
+  const okladka = (x) => (okl(x.okladka) ? `<img src="${okl(x.okladka)}" alt="" draggable="false">` : '<span class="brak-okl"></span>');
+  let lista, dol;
+  if (!zab.sprawdzone) {
+    lista = `<div class="utwory przeciagane">${zab.kolejnosc.map((k, i) => {
+      const x = t.pozycje[k];
+      return `<div class="utwor" data-poz="${i}">
+        <span class="nr">#${i + 1}</span>${okladka(x)}<span class="utwor-opis"><b>${esc(x.tytul)}</b>${x.autor ? `<small>${esc(x.autor)}</small>` : ''}</span>
+        <span class="strzalki"><button type="button" data-a="topka-gora" data-poz="${i}" aria-label="Wyżej"${i === 0 ? ' disabled' : ''}>▲</button><button type="button" data-a="topka-dol" data-poz="${i}" aria-label="Niżej"${i === n - 1 ? ' disabled' : ''}>▼</button></span>
+      </div>`;
+    }).join('')}</div>`;
+    dol = `<div class="akcje topka-akcje"><button class="przycisk" type="button" data-a="topka-sprawdz">Sprawdź</button><button class="tekstowy" type="button" data-a="topka-od-nowa">Wymieszaj</button></div>`;
+  } else {
+    const traf = zab.kolejnosc.filter((k, i) => k === i).length;
+    lista = `<div class="utwory">${zab.kolejnosc.map((k, i) => {
+      const x = t.pozycje[k], dobrze = k === i;
+      return `<div class="utwor sprawdzony ${dobrze ? 'trafiony' : 'pudlo'}" style="--d:${i * 70}ms">
+        <span class="nr">#${i + 1}</span>${okladka(x)}<span class="utwor-opis"><b>${esc(x.tytul)}</b><small>${dobrze ? 'Trafione!' : `Naprawdę #${k + 1}`}</small></span></div>`;
+    }).join('')}</div>`;
+    const prawdziwa = t.pozycje.map((x, i) => `<li>${okladka(x)}<span><b>#${i + 1} ${esc(x.tytul)}</b>${x.autor ? `<small>${esc(x.autor)}</small>` : ''}</span></li>`).join('');
+    const rek = czytaj('zostaw-topki-rekordy', {});
+    if (rek[t.id] === undefined || traf > rek[t.id]) { rek[t.id] = traf; pisz('zostaw-topki-rekordy', rek); }
+    if (traf === n) { odblokuj('topka-max'); deszczSerc(24); }
+    dol = `${ocenaHTML(traf, n)}
+      <h2>Prawdziwa kolejność</h2><ol class="prawdziwa">${prawdziwa}</ol>
+      <div class="akcje"><button class="przycisk" type="button" data-a="topka-od-nowa">Jeszcze raz</button><button class="tekstowy" type="button" data-a="zabawy-menu">Wróć do zabaw</button></div>`;
+  }
+  $app.innerHTML = `<main class="zabawy">
+    <button class="tekstowy wstecz" type="button" data-a="zabawy-menu">← Zabawy</button>
+    <h1 class="maly-h1">${esc(t.grupa)}</h1><p class="zabawy-opis">${esc(t.okres)}. ${zab.sprawdzone ? '' : 'Przytrzymaj i przeciągnij, żeby ułożyć od najczęściej słuchanego (#1). Możesz też używać strzałek.'}</p>
+    ${lista}${dol}</main>`;
+  if (!zab.sprawdzone) podepnijPrzeciaganie();
+}
+let blokujPrzewijanie = false;
+document.addEventListener('touchmove', (e) => { if (blokujPrzewijanie) e.preventDefault(); }, { passive: false });
+function podepnijPrzeciaganie() {
+  const lista = document.querySelector('.utwory.przeciagane');
+  if (!lista) return;
+  let akt = null, zegarek = null, startY = 0, krok = 0, z = 0, cel = 0, elementy = [];
+  const zacznij = (el, y) => {
+    akt = el; elementy = [...lista.children]; z = elementy.indexOf(el); cel = z; startY = y;
+    krok = el.getBoundingClientRect().height + 8;
+    el.classList.add('niesiony'); lista.classList.add('w-trakcie'); blokujPrzewijanie = true;
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) { /* nic */ } }
+  };
+  lista.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest('.utwor');
+    if (!el || e.target.closest('button')) return;
+    startY = e.clientY;
+    const id = e.pointerId;
+    zegarek = setTimeout(() => { zegarek = null; zacznij(el, startY); try { el.setPointerCapture(id); } catch (er) { /* nic */ } }, e.pointerType === 'mouse' ? 0 : 230);
+  });
+  lista.addEventListener('pointermove', (e) => {
+    if (!akt) { if (zegarek && Math.abs(e.clientY - startY) > 10) { clearTimeout(zegarek); zegarek = null; } return; }
+    e.preventDefault();
+    const dy = e.clientY - startY;
+    akt.style.transform = `translateY(${dy}px) scale(1.03)`;
+    cel = Math.max(0, Math.min(elementy.length - 1, z + Math.round(dy / krok)));
+    elementy.forEach((it, i) => {
+      if (it === akt) return;
+      let s = 0;
+      if (z < cel && i > z && i <= cel) s = -krok;
+      if (z > cel && i < z && i >= cel) s = krok;
+      it.style.transform = s ? `translateY(${s}px)` : '';
+    });
+  });
+  const koniec = () => {
+    if (zegarek) { clearTimeout(zegarek); zegarek = null; }
+    blokujPrzewijanie = false;
+    if (!akt) return;
+    akt = null;
+    przesunTopke(z, cel);
+    widokTopki();
+  };
+  lista.addEventListener('pointerup', koniec);
+  lista.addEventListener('pointercancel', koniec);
+  lista.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+/* Prawda czy fałsz */
+function startPF() {
+  const l = [...(zab.dane.prawdaFalsz || [])];
+  for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; }
+  zab.tryb = 'pf'; zab.pf = l; zab.i = 0; zab.wynik = 0; zab.odp = null;
+  widokPF();
+}
+function widokPF() {
+  const l = zab.pf, n = l.length;
+  let tresc;
+  if (zab.i >= n) {
+    const rek = czytaj('zostaw-pf-rekord', null);
+    if (rek === null || zab.wynik > rek) pisz('zostaw-pf-rekord', zab.wynik);
+    if (zab.wynik === n) { odblokuj('pf-max'); deszczSerc(24); }
+    tresc = `<div class="quiz-koniec">${ocenaHTML(zab.wynik, n)}
+      <div class="akcje"><button class="przycisk" type="button" data-a="pf-start">Jeszcze raz</button><button class="tekstowy" type="button" data-a="zabawy-menu">Wróć do zabaw</button></div></div>`;
+  } else {
+    const x = l[zab.i];
+    const odp = zab.odp;
+    const kl = (v) => (odp === null ? '' : (v === !!x.prawda ? ' dobra' : (v === odp ? ' zla' : ' wygaszona')));
+    const ok = odp === !!x.prawda;
+    tresc = `
+      <p class="quiz-licznik">Zdanie ${zab.i + 1} z ${n}</p>
+      <div class="pasek-postepu jasny" aria-hidden="true"><span style="width:${Math.round(zab.i / n * 100)}%"></span></div>
+      <h2 class="quiz-pytanie pf-zdanie">„${esc(x.zdanie)}”</h2>
+      <div class="pf-przyciski">
+        <button class="quiz-opcja pf-prawda${kl(true)}" type="button" data-a="pf-odp" data-v="1"${odp !== null ? ' disabled' : ''}>Prawda</button>
+        <button class="quiz-opcja pf-falsz${kl(false)}" type="button" data-a="pf-odp" data-v="0"${odp !== null ? ' disabled' : ''}>Fałsz</button>
+      </div>
+      ${odp !== null ? `<p class="quiz-kom ${ok ? 'ok' : 'nie'}">${ok ? 'Dobrze!' : `Nie, to ${x.prawda ? 'prawda' : 'fałsz'}.`}${x.komentarz ? ` ${esc(x.komentarz)}` : ''}</p>
+        <button class="przycisk" type="button" data-a="pf-dalej">${zab.i + 1 < n ? 'Dalej' : 'Wynik'}</button>` : ''}`;
+  }
+  $app.innerHTML = `<main class="zabawy"><button class="tekstowy wstecz" type="button" data-a="zabawy-menu">← Zabawy</button><h1 class="maly-h1">Prawda czy fałsz</h1>${tresc}</main>`;
 }
 
 /* ---------- pająk: wejście na strych ---------- */
@@ -1230,7 +1578,7 @@ function widokGry() {
     ${st.blad ? `<p class="blad-ogolny" role="alert">${esc(st.blad)}</p>` : ''}
     <header class="naglowek${st.strych || zdobyte.sekrety ? ' z-pajakiem' : ''}">
       ${st.strych ? pajakHTML() : ''}
-      ${zdobyte.sekrety ? `<button class="jajko-btn" type="button" data-a="sekrety" aria-label="Sekrety">${JAJKO_SVG}</button>` : ''}
+      ${zdobyte.sekrety ? `<div class="ikony-gora"><button class="jajko-btn" type="button" data-a="sekrety" aria-label="Sekrety">${JAJKO_SVG}</button></div>` : ''}
       <div class="tytul-rzad"><div><p class="mala" data-sekret>Hejj :)</p><h1>Twoje łamigłówki</h1></div>${kotHTML()}</div>
       <div class="liczniki">
         <div class="licznik"><span>Podpowiedzi</span>${kropki(st.postep.podpowiedzi.length)}</div>
@@ -1240,6 +1588,7 @@ function widokGry() {
       ${nastepna ? `<p class="nastepna" id="nastepna">Następne zagadki: <b>${fmtDzien(nastepna.t)} o ${fmtGodz(nastepna.t)}</b> (${zaIle(nastepna.t)})</p>` : ''}
     </header>
     <div class="dni">${dni}</div>
+    ${przyciskNudy()}
     <footer class="stopka"><span>Postęp zapisuje się sam.</span>
       <button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></footer>`;
   if (pierwsza) { const el = document.getElementById(pierwsza); if (el) el.focus(); }
@@ -1354,6 +1703,7 @@ function widokCzekania(cel) {
       <div class="zegar" id="zegar" role="timer" aria-live="off"></div>
       <p class="kiedy">${fmtDzien(cel)} o ${fmtGodz(cel)}</p>
       <p class="uwaga">Zajrzyj tu wtedy. Do tego czasu nic nie otwieraj :)</p>
+      ${przyciskNudy()}
       ${kotWidoczny ? `${kotHTML()}<p class="uwaga">A w międzyczasie możesz pogłaskać kota.</p>` : ''}
       <button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button>
     </main>`;
@@ -1442,6 +1792,11 @@ $app.addEventListener('submit', async (ev) => {
   // Rickroll: otwieramy od razu (jeszcze w kliknięciu), żeby telefon nie zablokował nowej karty.
   const kotNowy = SLOWA_KOTA.includes(S.normalizuj(odp)) && przywolajKota();
   if (kotNowy) setTimeout(() => { const k = document.querySelector('[data-kot]'); if (k) { k.classList.add('pojawia'); k.scrollIntoView({ block: 'center', behavior: 'smooth' }); } toast('Kot się pojawił! Pogłaszcz go :)'); }, 120);
+  if (SLOWA_ZABAW.includes(S.normalizuj(odp))) {
+    st.wpisane[nr] = '';
+    wejdzDoZabaw();
+    return;
+  }
   if (SLOWA_SEKRETOW.includes(S.normalizuj(odp))) {
     st.wpisane[nr] = '';
     wejdzDoSekretow();
@@ -1504,8 +1859,8 @@ $app.addEventListener('click', async (ev) => {
   const a = b.dataset.a, nr = Number(b.dataset.nr);
   if (a === 'wyloguj') {
     stopZegar(); zatrzymajKamere(); await api.wyloguj();
-    st.strych = false; strychDane = null; strychObietnica = null; kotWidoczny = false; zdobyte = {}; document.body.classList.remove('na-strychu', 'w-sekretach');
-    try { ['zostaw-strych', 'zostaw-kot', 'zostaw-osiagniecia', 'zostaw-glaski'].forEach((k) => localStorage.removeItem(k)); glaski = 0; } catch (e) { /* nic */ }
+    st.strych = false; strychDane = null; strychObietnica = null; kotWidoczny = false; zdobyte = {}; zabawyOdkryte = false; zab.dane = null; zab.obietnica = null; document.body.classList.remove('na-strychu', 'w-sekretach', 'w-zabawach');
+    try { ['zostaw-strych', 'zostaw-kot', 'zostaw-osiagniecia', 'zostaw-glaski', 'zostaw-zabawy', 'zostaw-quiz-rekord', 'zostaw-topki-rekordy', 'zostaw-pf-rekord'].forEach((k) => localStorage.removeItem(k)); glaski = 0; } catch (e) { /* nic */ }
     widokLogowania(); return;
   }
   if (a === 'strych') { b.classList.add('wspina'); await czekaj(380); wejdzNaStrych(); return; }
@@ -1517,6 +1872,20 @@ $app.addEventListener('click', async (ev) => {
   if (a === 'podpis-paczka') { await odbierzPaczke(Number(b.dataset.nr), b); return; }
   if (a === 'ze-strychu') { zejdzZeStrychu(); return; }
   if (a === 'z-sekretow') { wyjdzZSekretow(); return; }
+  if (a === 'zabawy') { wejdzDoZabaw(); return; }
+  if (a === 'z-zabaw') { wyjdzZZabaw(); return; }
+  if (a === 'zabawy-menu') { zab.tryb = 'menu'; widokZabaw(); return; }
+  if (a === 'quiz-start') { if (zab.dane) startQuiz(); return; }
+  if (a === 'quiz-odp') { if (zab.odp === null) { zab.odp = Number(b.dataset.k); if (zab.odp === zab.dane.quiz[zab.i].dobra) zab.wynik += 1; widokQuizu(); } return; }
+  if (a === 'quiz-dalej') { zab.i += 1; zab.odp = null; widokQuizu(); window.scrollTo(0, 0); return; }
+  if (a === 'topka') { if (zab.dane) { startTopka(b.dataset.id); window.scrollTo(0, 0); } return; }
+  if (a === 'topka-gora') { const i = Number(b.dataset.poz); przesunTopke(i, i - 1); widokTopki(); return; }
+  if (a === 'topka-dol') { const i = Number(b.dataset.poz); przesunTopke(i, i + 1); widokTopki(); return; }
+  if (a === 'topka-od-nowa') { startTopka(zab.topka.id); return; }
+  if (a === 'pf-start') { if (zab.dane) { startPF(); window.scrollTo(0, 0); } return; }
+  if (a === 'pf-odp') { if (zab.odp === null) { zab.odp = b.dataset.v === '1'; if (zab.odp === !!zab.pf[zab.i].prawda) zab.wynik += 1; widokPF(); } return; }
+  if (a === 'pf-dalej') { zab.i += 1; zab.odp = null; widokPF(); window.scrollTo(0, 0); return; }
+  if (a === 'topka-sprawdz') { zab.sprawdzone = true; widokTopki(); window.scrollTo(0, 0); return; }
   if (a === 'sekrety') { wejdzDoSekretow(); return; }
   if (a === 'demo-odliczanie') { widokCzekania(Date.now() + 2 * 86400000 + 3 * 3600000); return; }
   if (a === 'demo-wszystko') { api.otworzWszystko(); await startGry(false); return; }
@@ -1550,7 +1919,7 @@ setInterval(async () => {
   if (zamkniete.some((z) => Date.now() >= st.otwarcie(S.dzienPaczki(z.nr)))) {
     try {
       st.zagadki = await api.zagadki();
-      if (!document.body.classList.contains('na-strychu') && !document.body.classList.contains('w-sekretach')) widokGry();
+      if (!['na-strychu', 'w-sekretach', 'w-zabawach'].some((k) => document.body.classList.contains(k))) widokGry();
     } catch (e) { /* spróbuje znowu */ }
   } else {
     const el = document.getElementById('nastepna');

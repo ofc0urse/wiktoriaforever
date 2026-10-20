@@ -88,6 +88,14 @@
     <div id="raport"></div>
   </section>
 
+  <section class="blok" aria-labelledby="h-zab">
+    <h2 id="h-zab">Zabawy (quiz, prawda czy fałsz, topki)</h2>
+    <p class="info">Wczytaj plik <b>zabawy.json</b> (też trzymaj go tylko u siebie). Wgranie zastępuje poprzednie zabawy.</p>
+    <div class="wiersz"><label for="zab-plik">Plik</label><input class="pole" type="file" id="zab-plik" accept=".json,application/json"></div>
+    <div class="wiersz"><button class="przycisk" type="button" id="zab-wgraj" disabled>Wgraj zabawy</button></div>
+    <p id="zab-info" aria-live="polite"></p>
+  </section>
+
   <section class="blok" aria-labelledby="h-strych">
     <h2 id="h-strych">Strych (tajna strona)</h2>
     <p class="info">Otwiera się, gdy ona wpisze <b>strych</b> w pole odpowiedzi. Każda skrzynia ma swój dzień i godzinę otwarcia: wcześniej ona widzi tylko zamkniętą skrzynię z datą. Filmik: YouTube jako <b>Niepubliczny</b> albo Dysk Google („Każda osoba mająca link”). Zdjęcie wybierasz z telefonu lub komputera, zmniejszy się samo.</p>
@@ -255,6 +263,7 @@ function odswiezPrzyciski() {
   $('postep-czysc').disabled = !admin;
   $('zdj-pokaz').disabled = !admin;
   $('podp-pokaz').disabled = !admin;
+  $('zab-wgraj').disabled = !(admin && zabDane);
   $('st-dodaj').disabled = !admin;
   $('st-pokaz').disabled = !admin;
 }
@@ -333,6 +342,35 @@ $('st-lista').addEventListener('click', async (ev) => {
   try { await F.deleteDoc(F.doc(db, 'strych', b.dataset.usun)); await przebudujSpis(); pokazStrych(); }
   catch (e) { $('st-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}</span>`; }
 });
+
+/* ---------- Zabawy ---------- */
+let zabDane = null;
+$('zab-plik').onchange = async () => {
+  zabDane = null;
+  const f = $('zab-plik').files[0];
+  if (!f) { odswiezPrzyciski(); return; }
+  try {
+    const d = JSON.parse(await f.text());
+    delete d._jak;
+    const bledy = [];
+    (d.quiz || []).forEach((q, i) => { if (!q.pytanie || !Array.isArray(q.odpowiedzi) || !(q.dobra >= 0 && q.dobra < q.odpowiedzi.length)) bledy.push(`Quiz, pytanie ${i + 1}: sprawdź treść, odpowiedzi i "dobra".`); });
+    (d.prawdaFalsz || []).forEach((q, i) => { if (!q.zdanie || typeof q.prawda !== 'boolean') bledy.push(`Prawda/fałsz ${i + 1}: potrzebne "zdanie" i "prawda": true/false.`); });
+    (d.topki || []).forEach((t, i) => { if (!t.id || !Array.isArray(t.pozycje) || t.pozycje.length < 2) bledy.push(`Topka ${i + 1}: brak id albo pozycji.`); });
+    if (d.oceny && (!Array.isArray(d.oceny) || d.oceny.length !== 6)) bledy.push('"oceny" musi mieć dokładnie 6 tekstów.');
+    const rozmiar = new Blob([JSON.stringify(d)]).size;
+    if (rozmiar > 950000) bledy.push(`Plik za duży (${Math.round(rozmiar / 1024)} KB, max ~900 KB). Zmniejsz okładki.`);
+    if (bledy.length) { $('zab-info').innerHTML = `<span class="zle">${bledy.map(esc).join('<br>')}</span>`; }
+    else { zabDane = d; $('zab-info').innerHTML = `<span class="ok">OK: quiz ${(d.quiz || []).length} pytań, prawda/fałsz ${(d.prawdaFalsz || []).length}, topek ${(d.topki || []).length}, okładek ${Object.keys(d.okladki || {}).length}.</span>`; }
+  } catch (e) { $('zab-info').innerHTML = `<span class="zle">To nie jest poprawny JSON: ${esc(e.message)}</span>`; }
+  odswiezPrzyciski();
+};
+$('zab-wgraj').onclick = async () => {
+  if (!zabDane) return;
+  const b = $('zab-wgraj'); b.disabled = true; b.textContent = 'Wgrywam…';
+  try { await F.setDoc(F.doc(db, 'ustawienia', 'zabawy'), zabDane); $('zab-info').innerHTML = '<span class="ok">Wgrane. Na telefonie odśwież stronę.</span>'; }
+  catch (e) { $('zab-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}</span>`; }
+  b.textContent = 'Wgraj zabawy'; odswiezPrzyciski();
+};
 
 /* ---------- Podpisy ---------- */
 $('podp-pokaz').onclick = async () => {
