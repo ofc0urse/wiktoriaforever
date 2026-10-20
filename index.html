@@ -449,6 +449,63 @@
     body::before, body::after, .wejdz, .logowanie > *, .skan > *, .czekanie > *, .karta.swieza, .litera.nowa, .skrzynia, .kot svg, .kot .otwarte, .pajeczyna, .pajak { animation: none !important; }
     .czeka { opacity: 1; transform: none; }
   }
+  /* Wzór w tle i ustawienia wyglądu */
+  #wzor { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.07; background-size: 140px 140px; }
+  body.ciemny #wzor { opacity: 0.09; }
+  body.na-strychu #wzor, body.w-sekretach #wzor { display: none; }
+  .stopka-prawa { display: flex; align-items: center; gap: 14px; }
+  .ustawienia-warstwa { position: fixed; inset: 0; z-index: 400; background: rgba(20, 16, 14, 0.45); display: flex; align-items: flex-end; justify-content: center; animation: warstwa 0.25s ease both; }
+  .ustawienia-warstwa.znika { opacity: 0; transition: opacity 0.25s; }
+  @keyframes warstwa { from { opacity: 0; } }
+  .ustawienia {
+    width: 100%; max-width: 560px; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); border-radius: 22px 22px 0 0;
+    background: var(--papier); color: var(--tusz); display: flex; flex-direction: column; gap: 10px; animation: arkusz 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  @keyframes arkusz { from { transform: translateY(100%); } }
+  .ust-etykieta { margin: 6px 0 0; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--szary); }
+  .ust-wybor { display: grid; gap: 8px; }
+  .ust-wybor.dwa { grid-template-columns: 1fr 1fr; }
+  .ust-wybor.cztery { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ust-wybor button {
+    display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 14px; border: 2px solid var(--linia-pola);
+    background: var(--karta); color: var(--tusz); font-weight: 800; cursor: pointer; transition: border-color 0.2s, transform 0.15s;
+  }
+  .ust-wybor button:active { transform: scale(0.96); }
+  .ust-wybor button.wybrany { border-color: var(--zielen); box-shadow: 0 0 0 2px var(--zielen); }
+  .ust-wybor svg { width: 30px; height: 30px; }
+  .probka { width: 44px; height: 30px; border-radius: 8px; border: 1.5px solid #8A807C; }
+  .probka.jasna { background: #FFFDF8; } .probka.ciemna { background: #1C1917; }
+  .ust-gotowe { margin-top: 10px; }
+
+  /* Ciemny motyw */
+  :root { --karta: #fff; --linia-pola: #E6DAD6; }
+  body.ciemny {
+    --papier: #1C1917; --tusz: #F1EAE4; --szary: #B5AAA3; --zielen: #7CC892; --zielen-ciemna: #A6DDB4; --zielen-tlo: #1F2E25; --blad: #F08A84;
+    --karta: #26211F; --linia-pola: #3D3633;
+  }
+  body.ciemny::before { opacity: 0.18; }
+  body.ciemny .karta, body.ciemny .pole, body.ciemny .cyfra, body.ciemny .gra-karta, body.ciemny .topka-karta, body.ciemny .utwor,
+  body.ciemny .quiz-opcja, body.ciemny .ocena, body.ciemny .licznik { background: var(--karta); }
+  body.ciemny .karta.zrobiona { background: var(--zielen-tlo); }
+  body.ciemny .kod, body.ciemny .pytanie { background: #1C1917; border-color: #3D3633; }
+  body.ciemny .podp, body.ciemny .demo-pasek { background: #3A321F; border-color: #6B5A2A; color: var(--tusz); }
+  body.ciemny .przycisk { background: #2F6B3A; border-color: #3F8A4D; color: #fff; }
+  body.ciemny .przycisk:hover { background: #3A7D47; }
+  body.ciemny .toast { background: #F1EAE4; color: #1C1917; }
+  body.ciemny .zamkniety { border-color: #5E5552; }
+  body.ciemny .nudzisz { background: #2C2124; border-color: #6E3E49; }
+  body.ciemny .typ { border-color: var(--zielen); color: var(--zielen); }
+  body.ciemny .siec { color: rgba(241, 234, 228, 0.3); }
+  body.ciemny .pajak svg g, body.ciemny .pajak svg ellipse, body.ciemny .pajak svg circle:not([fill="#fff"]) { stroke: #F1EAE4; }
+  body.ciemny .pajak svg ellipse, body.ciemny .pajak svg circle[r="5"] { fill: #F1EAE4; stroke: none; }
+  body.ciemny .pajak .nitka { background: rgba(241, 234, 228, 0.5); }
+  body.ciemny .pajak svg circle[fill="#fff"] { fill: #1C1917; }
+  body.ciemny .podpis-pole { border-color: #5E5552; }
+  body.ciemny.w-zabawach { background: #241B1E; }
+  body.ciemny .utwor { border-color: #3D3633; }
+  body.ciemny .utwor.wybrany, body.ciemny .strzalki button { background: #2C2124; }
+  body.ciemny .strzalki button { border-color: #3D3633; }
+  body.ciemny .pasek-postepu.jasny { background: #3D3035; }
   .blad-ogolny { padding: 12px 14px; border-radius: 12px; border: 2px solid var(--blad); color: var(--blad); font-weight: 700; margin-bottom: 18px; }
 </style>
 </head>
@@ -941,6 +998,59 @@ function wyjdzZSekretow() {
     widokGry();
   });
 }
+
+/* ---------- Wygląd: motyw i wzór w tle ---------- */
+const WZORY = {
+  koty: '<path d="M8 15 10.5 5l6 6.5h7l6-6.5L32 15c1.4 2 2 4.2 2 6.5C34 29 27.8 34 20 34S6 29 6 21.5c0-2.3.6-4.5 2-6.5z"/>',
+  psy: '<ellipse cx="20" cy="21" rx="10.5" ry="11.5"/><ellipse cx="9" cy="16" rx="4.5" ry="9" transform="rotate(22 9 16)"/><ellipse cx="31" cy="16" rx="4.5" ry="9" transform="rotate(-22 31 16)"/>',
+  lisy: '<path d="M5 4l9 9h12l9-9-1.5 15L20 36 6.5 19z"/>'
+};
+let wyglad = { motyw: 'jasny', wzor: 'brak' };
+try { wyglad = { ...wyglad, ...(JSON.parse(localStorage.getItem('zostaw-wyglad')) || {}) }; } catch (e) { /* domyślny */ }
+function zastosujWyglad() {
+  document.body.classList.toggle('ciemny', wyglad.motyw === 'ciemny');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', wyglad.motyw === 'ciemny' ? '#1C1917' : '#FFFDF8');
+  let w = document.getElementById('wzor');
+  if (!w) { w = document.createElement('div'); w.id = 'wzor'; w.setAttribute('aria-hidden', 'true'); document.body.prepend(w); }
+  if (wyglad.wzor === 'brak' || !WZORY[wyglad.wzor]) { w.style.backgroundImage = 'none'; return; }
+  const kolor = wyglad.motyw === 'ciemny' ? '#F1EAE4' : '#2A2422';
+  const k = WZORY[wyglad.wzor];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140"><g fill="${kolor}"><g transform="translate(12 14) rotate(-12 20 20)">${k}</g><g transform="translate(82 78) rotate(14 20 20) scale(0.8)">${k}</g></g></svg>`;
+  w.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+function zapiszWyglad() { try { localStorage.setItem('zostaw-wyglad', JSON.stringify(wyglad)); } catch (e) { /* trudno */ } zastosujWyglad(); }
+const przyciskWygladu = () => '<button class="tekstowy wyglad-btn" type="button" data-wyglad>Wygląd</button>';
+function otworzWyglad() {
+  document.querySelector('.ustawienia-warstwa')?.remove();
+  const ikona = (n) => (WZORY[n] ? `<svg viewBox="0 0 40 40" aria-hidden="true"><g fill="currentColor">${WZORY[n]}</g></svg>` : '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="3"/><path d="M11 29 29 11" stroke="currentColor" stroke-width="3"/></svg>');
+  const w = document.createElement('div');
+  w.className = 'ustawienia-warstwa';
+  const rysuj = () => {
+    w.innerHTML = `<div class="ustawienia" role="dialog" aria-modal="true" aria-labelledby="ust-tytul">
+      <h2 id="ust-tytul">Wygląd</h2>
+      <p class="ust-etykieta">Tło</p>
+      <div class="ust-wybor dwa">
+        <button type="button" data-motyw="jasny" class="${wyglad.motyw === 'jasny' ? 'wybrany' : ''}"><span class="probka jasna"></span>Jasne</button>
+        <button type="button" data-motyw="ciemny" class="${wyglad.motyw === 'ciemny' ? 'wybrany' : ''}"><span class="probka ciemna"></span>Ciemne</button>
+      </div>
+      <p class="ust-etykieta">Wzór w tle</p>
+      <div class="ust-wybor cztery">
+        ${[['brak', 'Brak'], ['koty', 'Koty'], ['psy', 'Psy'], ['lisy', 'Lisy']].map(([v, n]) => `<button type="button" data-wzor="${v}" class="${wyglad.wzor === v ? 'wybrany' : ''}">${ikona(v)}${n}</button>`).join('')}
+      </div>
+      <button class="przycisk ust-gotowe" type="button" data-zamknij>Gotowe</button>
+    </div>`;
+  };
+  rysuj();
+  w.addEventListener('click', (e) => {
+    const m = e.target.closest('[data-motyw]'), z = e.target.closest('[data-wzor]');
+    if (m) { wyglad.motyw = m.dataset.motyw; zapiszWyglad(); rysuj(); return; }
+    if (z) { wyglad.wzor = z.dataset.wzor; zapiszWyglad(); rysuj(); return; }
+    if (e.target === w || e.target.closest('[data-zamknij]')) { w.classList.add('znika'); setTimeout(() => w.remove(), 250); }
+  });
+  document.body.append(w);
+}
+document.addEventListener('click', (e) => { if (e.target.closest('[data-wyglad]')) otworzWyglad(); });
+zastosujWyglad();
 
 /* ---------- Zabawy: quiz i układanie topek ---------- */
 const KOLOR_ZABAWY = '#FFF3F5';
@@ -1590,7 +1700,7 @@ function widokGry() {
     <div class="dni">${dni}</div>
     ${przyciskNudy()}
     <footer class="stopka"><span>Postęp zapisuje się sam.</span>
-      <button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></footer>`;
+      <span class="stopka-prawa">${przyciskWygladu()}<button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></span></footer>`;
   if (pierwsza) { const el = document.getElementById(pierwsza); if (el) el.focus(); }
   poRenderze();
 }
@@ -1705,7 +1815,7 @@ function widokCzekania(cel) {
       <p class="uwaga">Zajrzyj tu wtedy. Do tego czasu nic nie otwieraj :)</p>
       ${przyciskNudy()}
       ${kotWidoczny ? `${kotHTML()}<p class="uwaga">A w międzyczasie możesz pogłaskać kota.</p>` : ''}
-      <button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button>
+      <span class="stopka-prawa">${przyciskWygladu()}<button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></span>
     </main>`;
   const tik = () => {
     const ms = cel - Date.now();
