@@ -1207,7 +1207,7 @@ function widokZabaw() {
     srodek = `
       ${(d.quiz || []).length ? `<button class="gra-karta" type="button" data-a="quiz-start">
         <span class="gra-ikona">?</span>
-        <span><b>Quiz o mnie</b><small>${d.quiz.length} pytań${rekordQuiz !== null ? ` · najlepiej ${rekordQuiz}/${d.quiz.length}` : ''}</small></span>
+        <span><b>Quiz o mnie</b><small>${Math.min(QUIZ_RUNDA, d.quiz.length)} losowych pytań${rekordQuiz !== null ? ` · najlepiej ${rekordQuiz}/${Math.min(QUIZ_RUNDA, d.quiz.length)}` : ''}</small></span>
       </button>` : ''}
       ${(d.prawdaFalsz || []).length ? `<button class="gra-karta" type="button" data-a="pf-start" style="animation-delay:0.05s">
         <span class="gra-ikona pf">P/F</span>
@@ -1226,9 +1226,31 @@ function widokZabaw() {
   window.scrollTo(0, 0);
 }
 
-function startQuiz() { zab.tryb = 'quiz'; zab.i = 0; zab.wynik = 0; zab.odp = null; widokQuizu(); }
+const QUIZ_RUNDA = 10;
+const mieszaj = (t) => { const a = t.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+// Każda runda to 10 losowych pytań. Najpierw lecą te, których jeszcze nie było; gdy się skończą, pula zaczyna się od nowa.
+function losujRunde() {
+  const wszystkie = (zab.dane.quiz || []).filter((p) => p && Array.isArray(p.odpowiedzi) && p.odpowiedzi[p.dobra] !== undefined);
+  const ile = Math.min(QUIZ_RUNDA, wszystkie.length);
+  let byly = czytaj('zostaw-quiz-widziane', []);
+  if (!Array.isArray(byly)) byly = [];
+  let nowe = mieszaj(wszystkie.filter((p) => !byly.includes(p.pytanie)));
+  let runda = nowe.slice(0, ile);
+  if (runda.length < ile) {
+    const reszta = mieszaj(wszystkie.filter((p) => !runda.includes(p)));
+    runda = runda.concat(reszta.slice(0, ile - runda.length));
+    byly = [];
+  }
+  pisz('zostaw-quiz-widziane', byly.concat(runda.map((p) => p.pytanie)));
+  // Odpowiedzi też w losowej kolejności, żeby nie zapamiętać „ta druga”.
+  return mieszaj(runda).map((p) => {
+    const kolej = mieszaj(p.odpowiedzi.map((_, k) => k));
+    return { ...p, odpowiedzi: kolej.map((k) => p.odpowiedzi[k]), dobra: kolej.indexOf(p.dobra) };
+  });
+}
+function startQuiz() { zab.tryb = 'quiz'; zab.runda = losujRunde(); zab.i = 0; zab.wynik = 0; zab.odp = null; widokQuizu(); }
 function widokQuizu() {
-  const q = zab.dane.quiz, n = q.length;
+  const q = zab.runda, n = q.length;
   let tresc;
   if (zab.i >= n) {
     const w = zab.wynik;
@@ -2067,7 +2089,7 @@ $app.addEventListener('click', async (ev) => {
   if (a === 'wyloguj') {
     stopZegar(); zatrzymajKamere(); await api.wyloguj();
     st.strych = false; strychDane = null; strychObietnica = null; kotWidoczny = false; zdobyte = {}; zabawyOdkryte = false; zab.dane = null; zab.obietnica = null; document.body.classList.remove('na-strychu', 'w-sekretach', 'w-zabawach');
-    try { ['zostaw-strych', 'zostaw-kot', 'zostaw-osiagniecia', 'zostaw-glaski', 'zostaw-zabawy', 'zostaw-quiz-rekord', 'zostaw-topki-rekordy', 'zostaw-pf-rekord', 'zostaw-kot-imie', 'zostaw-karmienie'].forEach((k) => localStorage.removeItem(k)); glaski = 0; karmienia = 0; } catch (e) { /* nic */ }
+    try { ['zostaw-strych', 'zostaw-kot', 'zostaw-osiagniecia', 'zostaw-glaski', 'zostaw-zabawy', 'zostaw-quiz-rekord', 'zostaw-quiz-widziane', 'zostaw-topki-rekordy', 'zostaw-pf-rekord', 'zostaw-kot-imie', 'zostaw-karmienie'].forEach((k) => localStorage.removeItem(k)); glaski = 0; karmienia = 0; } catch (e) { /* nic */ }
     widokLogowania(); return;
   }
   if (a === 'strych') { b.classList.add('wspina'); await czekaj(380); wejdzNaStrych(); return; }
@@ -2083,7 +2105,7 @@ $app.addEventListener('click', async (ev) => {
   if (a === 'z-zabaw') { wyjdzZZabaw(); return; }
   if (a === 'zabawy-menu') { zab.tryb = 'menu'; widokZabaw(); return; }
   if (a === 'quiz-start') { if (zab.dane) startQuiz(); return; }
-  if (a === 'quiz-odp') { if (zab.odp === null) { zab.odp = Number(b.dataset.k); if (zab.odp === zab.dane.quiz[zab.i].dobra) zab.wynik += 1; widokQuizu(); } return; }
+  if (a === 'quiz-odp') { if (zab.odp === null) { zab.odp = Number(b.dataset.k); if (zab.odp === zab.runda[zab.i].dobra) zab.wynik += 1; widokQuizu(); } return; }
   if (a === 'quiz-dalej') { zab.i += 1; zab.odp = null; widokQuizu(); window.scrollTo(0, 0); return; }
   if (a === 'topka') { if (zab.dane) { startTopka(b.dataset.id); window.scrollTo(0, 0); } return; }
   if (a === 'topka-gora') { const i = Number(b.dataset.poz); przesunTopke(i, i - 1); widokTopki(); return; }
