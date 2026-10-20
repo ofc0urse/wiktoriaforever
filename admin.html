@@ -88,6 +88,18 @@
     <div id="raport"></div>
   </section>
 
+  <section class="blok" aria-labelledby="h-odbl">
+    <h2 id="h-odbl">Odblokowywanie paczek ręcznie</h2>
+    <p class="info">Tu sam decydujesz, kiedy zagadka się otwiera. „Otwórz teraz” działa od razu (na jej telefonie po odświeżeniu albo w ciągu ~30 s). „Zablokuj” trzyma paczkę zamkniętą, dopóki jej nie otworzysz. „Wg planu” wraca do daty z pliku. Uwaga: ponowne wgranie zagadki.json ustawia wszystko z powrotem wg planu.</p>
+    <div class="wiersz">
+      <button class="przycisk drugi" type="button" id="odbl-wczytaj" disabled>Pokaż paczki</button>
+      <button class="przycisk grozny" type="button" id="odbl-zablokuj-wszystkie" disabled>Zablokuj wszystkie</button>
+      <button class="przycisk drugi" type="button" id="odbl-plan-wszystkie" disabled>Wszystkie wg planu</button>
+    </div>
+    <p id="odbl-info" aria-live="polite"></p>
+    <div id="odbl-lista"></div>
+  </section>
+
   <section class="blok" aria-labelledby="h-zab">
     <h2 id="h-zab">Zabawy (quiz, prawda czy fałsz, topki)</h2>
     <p class="info">Wczytaj plik <b>zabawy.json</b> (też trzymaj go tylko u siebie). Wgranie zastępuje poprzednie zabawy.</p>
@@ -263,6 +275,7 @@ function odswiezPrzyciski() {
   $('postep-czysc').disabled = !admin;
   $('zdj-pokaz').disabled = !admin;
   $('podp-pokaz').disabled = !admin;
+  ['odbl-wczytaj', 'odbl-zablokuj-wszystkie', 'odbl-plan-wszystkie'].forEach((id) => { $(id).disabled = !admin; });
   $('zab-wgraj').disabled = !(admin && zabDane);
   $('st-dodaj').disabled = !admin;
   $('st-pokaz').disabled = !admin;
@@ -342,6 +355,70 @@ $('st-lista').addEventListener('click', async (ev) => {
   try { await F.deleteDoc(F.doc(db, 'strych', b.dataset.usun)); await przebudujSpis(); pokazStrych(); }
   catch (e) { $('st-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}</span>`; }
 });
+
+/* ---------- Ręczne odblokowywanie ---------- */
+const ZAMKNIETE_RECZNIE = Date.UTC(2099, 0, 1);
+async function planOtwarcia() {
+  const u = await F.getDoc(F.doc(db, 'ustawienia', 'gra'));
+  if (!u.exists()) throw new Error('Najpierw wgraj zagadki.json.');
+  const { start, godzina } = u.data();
+  const [y, m, d] = String(start).split('-').map(Number);
+  return (nr) => S.warszawaNaUtc(y, m, d + S.dzienPaczki(nr) - 1, Number(godzina) || 0);
+}
+async function ustawOtwarcie(nr, ms) {
+  await F.updateDoc(F.doc(db, 'zagadki', nrId(nr)), { odblokowanie: F.Timestamp.fromMillis(ms) });
+}
+async function pokazOdblokowanie() {
+  try {
+    const plan = await planOtwarcia();
+    const s = await F.getDocs(F.collection(db, 'zagadki'));
+    const teraz = Date.now();
+    const wiersze = [...s.docs].map((d) => d.data()).sort((a, b) => a.nr - b.nr).map((z) => {
+      const t = z.odblokowanie.toMillis();
+      const stan = t >= ZAMKNIETE_RECZNIE ? '<span class="zle">zablokowana ręcznie</span>'
+        : t <= teraz ? '<span class="ok">OTWARTA</span>' : `otworzy się ${esc(fmt(t))}`;
+      const wgPlanu = Math.abs(t - plan(z.nr)) < 60000;
+      return `<tr><td><b>${z.nr}</b></td><td>${S.dzienPaczki(z.nr)}</td><td>${esc(z.tytul || '')}</td><td>${stan}${wgPlanu ? '' : ' <small class="info">(zmienione ręcznie)</small>'}</td>
+        <td class="wiersz" style="gap:6px">
+          <button class="przycisk" type="button" data-odbl="teraz" data-nr="${z.nr}"${t <= teraz ? ' disabled' : ''}>Otwórz teraz</button>
+          <button class="przycisk grozny" type="button" data-odbl="zablokuj" data-nr="${z.nr}"${t >= ZAMKNIETE_RECZNIE ? ' disabled' : ''}>Zablokuj</button>
+          <button class="przycisk drugi" type="button" data-odbl="plan" data-nr="${z.nr}"${wgPlanu ? ' disabled' : ''}>Wg planu</button>
+        </td></tr>`;
+    }).join('');
+    $('odbl-lista').innerHTML = `<div class="tabela"><table><thead><tr><th>Nr</th><th>Dzień</th><th>Tytuł</th><th>Stan</th><th></th></tr></thead><tbody>${wiersze}</tbody></table></div>`;
+  } catch (e) { $('odbl-lista').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}</p>`; }
+}
+$('odbl-wczytaj').onclick = pokazOdblokowanie;
+$('odbl-lista').addEventListener('click', async (ev) => {
+  const b = ev.target.closest('[data-odbl]');
+  if (!b) return;
+  const nr = Number(b.dataset.nr), co = b.dataset.odbl;
+  b.disabled = true;
+  try {
+    if (co === 'teraz') await ustawOtwarcie(nr, Date.now() - 1000);
+    if (co === 'zablokuj') await ustawOtwarcie(nr, ZAMKNIETE_RECZNIE);
+    if (co === 'plan') { const plan = await planOtwarcia(); await ustawOtwarcie(nr, plan(nr)); }
+    $('odbl-info').innerHTML = `<span class="ok">Paczka ${nr}: ${co === 'teraz' ? 'otwarta' : co === 'zablokuj' ? 'zablokowana' : 'wróciła do planu'}.</span>`;
+  } catch (e) { $('odbl-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}</span>`; }
+  pokazOdblokowanie();
+});
+async function wszystkie(fn, opis) {
+  try {
+    const s = await F.getDocs(F.collection(db, 'zagadki'));
+    const b = F.writeBatch(db);
+    for (const d of s.docs) b.update(d.ref, { odblokowanie: F.Timestamp.fromMillis(await fn(d.data().nr)) });
+    await b.commit();
+    $('odbl-info').innerHTML = `<span class="ok">${opis}</span>`;
+  } catch (e) { $('odbl-info').innerHTML = `<span class="zle">Błąd: ${esc(e.code || e.message)}</span>`; }
+  pokazOdblokowanie();
+}
+let pewnoBlok = false;
+$('odbl-zablokuj-wszystkie').onclick = () => {
+  if (!pewnoBlok) { pewnoBlok = true; $('odbl-zablokuj-wszystkie').textContent = 'Na pewno? Kliknij jeszcze raz'; return; }
+  pewnoBlok = false; $('odbl-zablokuj-wszystkie').textContent = 'Zablokuj wszystkie';
+  wszystkie(async () => ZAMKNIETE_RECZNIE, 'Wszystkie paczki zablokowane. Otwieraj je teraz po kolei przyciskiem „Otwórz teraz”.');
+};
+$('odbl-plan-wszystkie').onclick = async () => { const plan = await planOtwarcia().catch(() => null); if (!plan) { $('odbl-info').innerHTML = '<span class="zle">Najpierw wgraj zagadki.json.</span>'; return; } wszystkie(async (nr) => plan(nr), 'Wszystkie paczki wróciły do planu.'); };
 
 /* ---------- Zabawy ---------- */
 let zabDane = null;

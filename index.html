@@ -2023,14 +2023,27 @@ $app.addEventListener('click', async (ev) => {
 });
 
 // Co pół minuty: odśwież „za ile”, a gdy wybije godzina, wczytaj nowe zagadki.
+let sprawdzanie = 0;
+async function odswiezZagadki() {
+  try {
+    const nowe = await api.zagadki();
+    const bylo = st.zagadki.filter((z) => !z.zablokowana).length;
+    st.zagadki = nowe;
+    const naGrze = !['na-strychu', 'w-sekretach', 'w-zabawach'].some((k) => document.body.classList.contains(k)) && document.querySelector('.naglowek');
+    if (nowe.filter((z) => !z.zablokowana).length !== bylo) {
+      if (document.querySelector('.czekanie')) { startGry(true); return; }
+      if (naGrze && !st.zajete) { widokGry(); toast('Nowa zagadka się otworzyła!'); }
+    }
+  } catch (e) { /* spróbuje znowu */ }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && st.postep) odswiezZagadki(); });
 setInterval(async () => {
   if (!st.postep || !st.otwarcie || st.zajete) return;
   const zamkniete = st.zagadki.filter((z) => z.zablokowana);
-  if (zamkniete.some((z) => Date.now() >= st.otwarcie(S.dzienPaczki(z.nr)))) {
-    try {
-      st.zagadki = await api.zagadki();
-      if (!['na-strychu', 'w-sekretach', 'w-zabawach'].some((k) => document.body.classList.contains(k))) widokGry();
-    } catch (e) { /* spróbuje znowu */ }
+  sprawdzanie += 1;
+  // co ~1 minutę (albo gdy minie godzina z planu) sprawdzamy, czy jakaś paczka nie została otwarta, także ręcznie w panelu
+  if (zamkniete.length && document.visibilityState === 'visible' && (sprawdzanie % 2 === 0 || zamkniete.some((z) => Date.now() >= st.otwarcie(S.dzienPaczki(z.nr))))) {
+    await odswiezZagadki();
   } else {
     const el = document.getElementById('nastepna');
     if (el) {
