@@ -153,6 +153,17 @@
     <div id="zdjecia" class="zdjecia"></div>
   </section>
 
+  <section class="blok" aria-labelledby="h-haslo">
+    <h2 id="h-haslo">Hasło do gry (konto gracza)</h2>
+    <p class="info">Sprawdza i zmienia hasło, które ona wpisuje na stronie. Nie trzeba być zalogowanym jako admin. Hasło nigdzie się nie zapisuje.</p>
+    <form id="haslo-form" class="wiersz" autocomplete="off">
+      <label for="haslo-stare">Obecne hasło</label><input class="pole" id="haslo-stare" type="text" inputmode="numeric" autocomplete="off">
+      <label for="haslo-nowe">Nowe hasło (puste = tylko sprawdź)</label><input class="pole" id="haslo-nowe" type="text" inputmode="numeric" autocomplete="off">
+      <button class="przycisk" type="submit">Sprawdź / zmień</button>
+    </form>
+    <p id="haslo-info" aria-live="polite"></p>
+  </section>
+
   <section class="blok" aria-labelledby="h-postep">
     <h2 id="h-postep">Postęp gracza</h2>
     <div class="wiersz">
@@ -193,11 +204,11 @@ $('sz-kopiuj').onclick = async () => {
 };
 
 /* ---------- Firebase ---------- */
-let F, A, auth, db;
+let F, A, auth, db, nowaApp;
 async function initFirebase() {
   const B = 'https://www.gstatic.com/firebasejs/10.12.2/';
   const [{ initializeApp }, a, f] = await Promise.all([import(B + 'firebase-app.js'), import(B + 'firebase-auth.js'), import(B + 'firebase-firestore.js')]);
-  A = a; F = f;
+  A = a; F = f; nowaApp = initializeApp;
   const app = initializeApp(CFG.firebase);
   auth = A.getAuth(app); db = F.getFirestore(app);
   await auth.authStateReady();
@@ -469,6 +480,43 @@ $('podp-pokaz').onclick = async () => {
       return `<figure><img src="${z.obraz}" alt="Podpis: ${esc(co)}" style="object-fit:contain;background:#fff"><figcaption><b>${esc(co)}</b><br>${esc(z.kiedy ? fmt(z.kiedy.toMillis()) : '')}</figcaption></figure>`;
     }).join('');
   } catch (e) { $('podpisy').innerHTML = `<p class="zle">Błąd: ${esc(e.code || e.message)}. Czy wkleiłeś nowe reguły?</p>`; }
+};
+
+/* ---------- Hasło gracza ---------- */
+// Tak samo jak w index.html: to, co wpisze, jest normalizowane i dostaje końcówkę z config.js.
+const hasloFirebase = (h) => S.normalizuj(h).toLowerCase() + (CFG.koncowkaHasla || '');
+$('haslo-form').onsubmit = async (ev) => {
+  ev.preventDefault();
+  const info = $('haslo-info');
+  if (!MA_FIREBASE || !nowaApp) { info.innerHTML = '<span class="zle">Firebase nie działa.</span>'; return; }
+  const stare = hasloFirebase($('haslo-stare').value), nowe = hasloFirebase($('haslo-nowe').value);
+  if (!stare) { info.innerHTML = '<span class="zle">Wpisz obecne hasło.</span>'; return; }
+  if ($('haslo-nowe').value && nowe.length < 6) { info.innerHTML = '<span class="zle">Nowe hasło musi mieć co najmniej 6 znaków.</span>'; return; }
+  info.textContent = 'Sprawdzam…';
+  let app2 = null;
+  try {
+    // osobna „aplikacja”, żeby nie wylogować Cię z konta admina
+    app2 = nowaApp(CFG.firebase, 'haslo-' + Date.now());
+    const auth2 = A.getAuth(app2);
+    await A.setPersistence(auth2, A.inMemoryPersistence);
+    const { user } = await A.signInWithEmailAndPassword(auth2, CFG.graczEmail, stare);
+    if (!$('haslo-nowe').value) { info.innerHTML = `<span class="ok">To hasło działa dla ${esc(CFG.graczEmail)}.</span>`; }
+    else {
+      await A.updatePassword(user, nowe);
+      info.innerHTML = `<span class="ok">Zmienione. Od teraz działa tylko nowe hasło. Na telefonie wyloguj się z gry i zaloguj nowym.</span>`;
+      $('haslo-stare').value = ''; $('haslo-nowe').value = '';
+    }
+    await A.signOut(auth2);
+  } catch (e) {
+    const c = e && e.code;
+    const opis = ['auth/invalid-credential', 'auth/wrong-password', 'auth/invalid-login-credentials'].includes(c) ? 'Firebase nie przyjmuje tego hasła (albo konto gracza ma inny e-mail niż w config.js).'
+      : c === 'auth/user-not-found' ? `Nie ma konta ${CFG.graczEmail}. Załóż je w Firebase → Authentication → Users.`
+      : c === 'auth/too-many-requests' ? 'Za dużo prób. Odczekaj kilka minut.'
+      : c === 'auth/operation-not-allowed' ? 'Logowanie e-mailem i hasłem jest wyłączone w Firebase → Authentication → Sign-in method.'
+      : 'Błąd.';
+    info.innerHTML = `<span class="zle">${esc(opis)} (${esc(c || (e && e.message) || '?')})</span>`;
+  }
+  if (app2) { try { const { deleteApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'); await deleteApp(app2); } catch (er) { /* nic */ } }
 };
 
 /* ---------- Rysunki ---------- */
