@@ -194,6 +194,19 @@
   }
   @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 12px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
   .komunikat.jajko { color: var(--zielen-ciemna); }
+  .kot-imie {
+    position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); padding: 1px 8px; border-radius: 99px; background: var(--karta, #fff);
+    border: 1.5px solid #D98A96; font-family: var(--odr); font-size: 18px; font-weight: 700; line-height: 1.2; color: #B8324F; white-space: nowrap; pointer-events: none;
+  }
+  .kot-imie.nowe { animation: litera 0.7s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  .rybka { position: absolute; left: 50%; top: -60px; width: 38px; height: 24px; margin-left: -19px; pointer-events: none; animation: rybka 0.9s cubic-bezier(0.5, 0, 0.8, 0.6) forwards; }
+  .rybka svg { width: 100%; height: 100%; }
+  @keyframes rybka { 0% { transform: translateY(0) rotate(-20deg); opacity: 0; } 20% { opacity: 1; } 80% { transform: translateY(78px) rotate(15deg) scale(0.8); opacity: 1; } 100% { transform: translateY(86px) scale(0.2); opacity: 0; } }
+  .kot.je svg { animation: mniam 0.4s ease-in-out 4 !important; }
+  @keyframes mniam { 50% { transform: scale(1.06, 0.94); } }
+  .ust-wybor svg { max-height: 30px; }
+  .kot-imie-form { display: flex; flex-direction: column; gap: 6px; }
+  .kot-imie-form[hidden] { display: none; }
   body.w-zabawach { background: #FFF3F5; }
   body.w-zabawach::before { display: none; }
   .zabawy { display: flex; flex-direction: column; gap: 14px; }
@@ -560,10 +573,92 @@ function przywolajKota() {
   odblokuj('kotek');
   return true;
 }
+/* Kot: przytrzymanie otwiera karmienie i nadawanie imienia */
+const kotImie = () => { try { return localStorage.getItem('zostaw-kot-imie') || ''; } catch (e) { return ''; } };
+const RYBKA = '<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12C8 2 22 0 30 12 22 24 8 22 2 12z" fill="#F2A65A"/><path d="M29 12l9-8v16z" fill="#E08A3A"/><circle cx="10" cy="10" r="1.8" fill="#2A2422"/><path d="M16 6q3 6 0 12" fill="none" stroke="#E08A3A" stroke-width="1.6"/></svg>';
+let kotDotyk = null;
+let kotDlugieKoniec = 0; // po przytrzymaniu telefon i tak wysyła „klik”: ignorujemy go przez chwilę
+document.addEventListener('pointerdown', (e) => {
+  const k = e.target.closest('[data-kot]');
+  if (!k) return;
+  const x0 = e.clientX, y0 = e.clientY;
+  clearTimeout(kotDotyk);
+  let dlugie = false;
+  kotDotyk = setTimeout(() => { dlugie = true; kotDlugieKoniec = Date.now() + 5000; if (navigator.vibrate) { try { navigator.vibrate(15); } catch (er) { /* nic */ } } menuKota(k); }, 550);
+  const anuluj = (ev) => { if (dlugie && ev && ev.type !== 'pointermove') { kotDlugieKoniec = Date.now() + 450; cleanup(); return; } if (!ev || ev.type !== 'pointermove' || Math.hypot(ev.clientX - x0, ev.clientY - y0) > 12) { clearTimeout(kotDotyk); cleanup(); } };
+  const cleanup = () => { document.removeEventListener('pointerup', anuluj); document.removeEventListener('pointercancel', anuluj); document.removeEventListener('pointermove', anuluj); };
+  document.addEventListener('pointerup', anuluj); document.addEventListener('pointercancel', anuluj); document.addEventListener('pointermove', anuluj);
+});
+document.addEventListener('contextmenu', (e) => { if (e.target.closest('[data-kot]')) e.preventDefault(); });
+function menuKota(kot) {
+  document.querySelector('.ustawienia-warstwa')?.remove();
+  const w = document.createElement('div');
+  w.className = 'ustawienia-warstwa';
+  const imie = kotImie();
+  w.innerHTML = `<div class="ustawienia" role="dialog" aria-modal="true" aria-labelledby="kot-tytul">
+    <h2 id="kot-tytul">${imie ? esc(imie) : 'Twój kot'}</h2>
+    <div class="ust-wybor dwa">
+      <button type="button" data-kot-akcja="karm">${RYBKA}Nakarm</button>
+      <button type="button" data-kot-akcja="nazwij"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>${imie ? 'Zmień imię' : 'Nazwij'}</button>
+    </div>
+    <form class="kot-imie-form" hidden>
+      <label class="ust-etykieta" for="kot-imie-pole">Jak ma się nazywać?</label>
+      <div class="wiersz"><input class="pole" id="kot-imie-pole" maxlength="20" autocomplete="off" value="${esc(imie)}" placeholder="np. Mruczek"><button class="przycisk" type="submit">Zapisz</button></div>
+    </form>
+    <button class="tekstowy" type="button" data-zamknij>Zamknij</button>
+  </div>`;
+  const zamknij = () => { w.classList.add('znika'); setTimeout(() => w.remove(), 250); };
+  w.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-kot-akcja]');
+    if (a && a.dataset.kotAkcja === 'karm') { zamknij(); setTimeout(() => nakarmKota(document.querySelector('[data-kot]') || kot), 260); return; }
+    if (a && a.dataset.kotAkcja === 'nazwij') { const f = w.querySelector('.kot-imie-form'); f.hidden = false; f.querySelector('input').focus(); return; }
+    if (e.target.closest('[data-zamknij]') || (e.target === w && Date.now() > kotDlugieKoniec)) zamknij();
+  });
+  w.querySelector('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nowe = w.querySelector('input').value.trim().slice(0, 20);
+    try { if (nowe) localStorage.setItem('zostaw-kot-imie', nowe); else localStorage.removeItem('zostaw-kot-imie'); } catch (er) { /* trudno */ }
+    zamknij();
+    document.querySelectorAll('[data-kot]').forEach((k) => {
+      let t = k.querySelector('.kot-imie');
+      if (!nowe) { t?.remove(); return; }
+      if (!t) { t = document.createElement('span'); t.className = 'kot-imie'; t.setAttribute('aria-hidden', 'true'); k.append(t); }
+      t.textContent = nowe; t.classList.remove('nowe'); void t.offsetWidth; t.classList.add('nowe');
+    });
+    if (nowe) { odblokuj('imie'); toast(`Kot ma teraz imię: ${nowe} :)`); }
+  });
+  document.body.append(w);
+}
+let karmienia = 0;
+try { karmienia = Number(localStorage.getItem('zostaw-karmienie')) || 0; } catch (e) { karmienia = 0; }
+function nakarmKota(kot) {
+  if (!kot) return;
+  const r = document.createElement('span');
+  r.className = 'rybka'; r.innerHTML = RYBKA;
+  kot.append(r);
+  setTimeout(() => {
+    r.remove();
+    const d = kot.querySelector('.dymek');
+    if (d) { d.textContent = 'mniam!'; setTimeout(() => { d.textContent = 'mrrr'; }, 1600); }
+    kot.classList.remove('je', 'mruczy'); void kot.offsetWidth; kot.classList.add('je', 'mruczy');
+    setTimeout(() => kot.classList.remove('je', 'mruczy'), 1600);
+    for (let i = 0; i < 3; i++) setTimeout(() => { const s = document.createElement('span'); s.className = 'serce'; s.innerHTML = SERCE; s.style.left = `${25 + Math.random() * 45}px`; s.style.top = '12px'; kot.append(s); setTimeout(() => s.remove(), 1200); }, i * 180);
+    karmienia += 1;
+    try { localStorage.setItem('zostaw-karmienie', String(karmienia)); } catch (e) { /* trudno */ }
+    odblokuj('karmienie');
+    const imie = kotImie();
+    if (karmienia === 1) toast(`${imie || 'Kot'} najedzony :)`);
+    else if (karmienia === 10) toast(`${imie || 'Kot'} nie zmieści już nic więcej, hah`);
+    else if (karmienia === 30) toast(`${imie || 'Kot'} jest teraz bardzo okrągły.`);
+  }, 900);
+}
+
 function kotHTML() {
   if (!kotWidoczny) return '';
-  return `<button class="kot" type="button" data-kot aria-label="Kot. Pogłaszcz go.">
+  const imie = kotImie();
+  return `<button class="kot" type="button" data-kot aria-label="${imie ? `Kot ${esc(imie)}` : 'Kot'}. Pogłaszcz go, przytrzymaj, żeby nakarmić albo nazwać.">
     <span class="dymek" aria-hidden="true">mrrr</span>
+    ${imie ? `<span class="kot-imie" aria-hidden="true">${esc(imie)}</span>` : ''}
     <svg viewBox="0 0 120 120" aria-hidden="true">
       <path class="ogon" d="M86 98c14 0 22-10 20-24-1-7-6-10-9-8" fill="none" stroke="#8E8784" stroke-width="8" stroke-linecap="round"/>
       <ellipse cx="60" cy="92" rx="30" ry="22" fill="#8E8784"/>
@@ -925,6 +1020,8 @@ const OSIAGNIECIA = [
   { id: 'sekrety', nazwa: 'Łowczyni sekretów', opis: 'Znalazłaś tę gablotę.', ikona: 'jajko' },
   { id: 'strych', nazwa: 'Strych', opis: 'Weszłaś na swój słynny strych.', ikona: 'pajak' },
   { id: 'kotek', nazwa: 'Kici kici', opis: 'Przywołałaś kota.', ikona: 'kot' },
+  { id: 'karmienie', nazwa: 'Pełny brzuszek', opis: 'Nakarmiłaś kota.', ikona: 'kot' },
+  { id: 'imie', nazwa: 'Chrzciny', opis: 'Kot dostał od Ciebie imię.', ikona: 'serce' },
   { id: 'kot1', nazwa: 'Pierwszy głask', opis: 'Pogłaskałaś kota.', ikona: 'lapa' },
   { id: 'kot15', nazwa: 'Moje urodziny', opis: '15 głasków, jak 15 października.', ikona: 'lapa' },
   { id: 'kot26', nazwa: 'Twoje urodziny', opis: '26 głasków, jak 26 marca.', ikona: 'lapa' },
@@ -1961,7 +2058,7 @@ $app.addEventListener('input', (ev) => {
 
 $app.addEventListener('click', async (ev) => {
   const kot = ev.target.closest('[data-kot]');
-  if (kot) { glaszcz(kot); return; }
+  if (kot) { if (Date.now() < kotDlugieKoniec) return; glaszcz(kot); return; }
   if (ev.target.closest('[data-klodka]')) { odblokuj('klodka'); toast('Bardzo chciałbym ci dać klucz, ale musisz poczekać :('); return; }
   if (ev.target.closest('[data-sekret]')) { sekretTytulu(); return; }
   const b = ev.target.closest('button[data-a]');
@@ -1970,7 +2067,7 @@ $app.addEventListener('click', async (ev) => {
   if (a === 'wyloguj') {
     stopZegar(); zatrzymajKamere(); await api.wyloguj();
     st.strych = false; strychDane = null; strychObietnica = null; kotWidoczny = false; zdobyte = {}; zabawyOdkryte = false; zab.dane = null; zab.obietnica = null; document.body.classList.remove('na-strychu', 'w-sekretach', 'w-zabawach');
-    try { ['zostaw-strych', 'zostaw-kot', 'zostaw-osiagniecia', 'zostaw-glaski', 'zostaw-zabawy', 'zostaw-quiz-rekord', 'zostaw-topki-rekordy', 'zostaw-pf-rekord'].forEach((k) => localStorage.removeItem(k)); glaski = 0; } catch (e) { /* nic */ }
+    try { ['zostaw-strych', 'zostaw-kot', 'zostaw-osiagniecia', 'zostaw-glaski', 'zostaw-zabawy', 'zostaw-quiz-rekord', 'zostaw-topki-rekordy', 'zostaw-pf-rekord', 'zostaw-kot-imie', 'zostaw-karmienie'].forEach((k) => localStorage.removeItem(k)); glaski = 0; karmienia = 0; } catch (e) { /* nic */ }
     widokLogowania(); return;
   }
   if (a === 'strych') { b.classList.add('wspina'); await czekaj(380); wejdzNaStrych(); return; }
