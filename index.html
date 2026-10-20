@@ -194,6 +194,40 @@
   }
   @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 12px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
   .komunikat.jajko { color: var(--zielen-ciemna); }
+  body.w-sekretach { background: #1B1A2E; color: #EDE9FF; }
+  body.w-sekretach::before { display: none; }
+  .sekrety { display: flex; flex-direction: column; gap: 14px; }
+  .sekrety .mala { color: #F2C14E; }
+  .sekrety h1 { color: #FFF8E6; font-size: 60px; animation: wejdz 0.7s 0.1s both; }
+  .sekrety-wstep { margin: 0; color: #C9C3E6; }
+  .sekrety-wstep b { color: #F2C14E; }
+  .pasek-postepu { height: 10px; border-radius: 99px; background: #2C2A47; overflow: hidden; }
+  .pasek-postepu span { display: block; height: 100%; background: linear-gradient(90deg, #F2C14E, #F6D8DC); border-radius: 99px; animation: pasek 1.2s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: left; }
+  @keyframes pasek { from { transform: scaleX(0); } }
+  .kafle { list-style: none; margin: 6px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .kafel { padding: 14px 12px; border-radius: 16px; background: #24223D; border: 1.5px dashed #3E3B63; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; color: #8E89B3; animation: wejdz 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: var(--d, 0ms); }
+  .kafel b { font-size: 15px; color: #A9A4CC; }
+  .kafel small { font-size: 13px; line-height: 1.3; }
+  .kafel .ikona { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #2C2A47; }
+  .kafel .ikona svg { width: 24px; height: 24px; }
+  .kafel.zdobyty { border-style: solid; border-color: #F2C14E; background: linear-gradient(180deg, #2E2B4F, #24223D); color: #E6E1FF; }
+  .kafel.zdobyty b { color: #FFF8E6; }
+  .kafel.zdobyty .ikona { background: #F2C14E; color: #1B1A2E; box-shadow: 0 0 18px rgba(242, 193, 78, 0.45); }
+  .sekrety-wyjscie { align-self: flex-start; margin-top: 16px; background: #F2C14E; border-color: #F2C14E; color: #1B1A2E; }
+  .osiagniecie-popup {
+    position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 50%; z-index: 300; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; border-radius: 16px; background: #1B1A2E; color: #FFF8E6;
+    border: 1.5px solid #F2C14E; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); width: max-content; max-width: 92vw;
+    animation: popup 3.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; pointer-events: none;
+  }
+  .osiagniecie-popup .ikona { width: 38px; height: 38px; flex: none; border-radius: 50%; background: #F2C14E; color: #1B1A2E; display: flex; align-items: center; justify-content: center; }
+  .osiagniecie-popup .ikona svg { width: 20px; height: 20px; }
+  .osiagniecie-popup small { display: block; font-size: 12px; color: #F2C14E; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+  .osiagniecie-popup b { display: block; font-size: 16px; }
+  @keyframes popup { 0% { opacity: 0; transform: translate(-50%, -20px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
+  .stopka-prawa { display: flex; align-items: center; gap: 10px; }
+  .jajko-btn { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid #E2C46B; background: #FFF4D6; color: #C79A2B; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .jajko-btn svg { width: 20px; height: 20px; }
   .podpis-pole { position: relative; width: 100%; height: 150px; border: 2px dashed #8A807C; border-radius: 12px; background: #fff; }
   .podpis-pole canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; border-radius: 12px; }
   .podpis-linia { position: absolute; left: 16px; right: 16px; bottom: 34px; text-align: left; border-bottom: 1.5px solid #CFC6BF; color: #8A807C; font-weight: 800; line-height: 1; pointer-events: none; padding-bottom: 2px; }
@@ -424,33 +458,37 @@ function glaszcz(kot) {
   kot.append(s); setTimeout(() => s.remove(), 1200);
   if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) { /* nie wszystkie telefony */ } }
   if (GLASKI[glaski]) toast(GLASKI[glaski]);
+  if (glaski >= 1) odblokuj('kot1');
+  if (glaski >= 15) odblokuj('kot15');
+  if (glaski >= 26) odblokuj('kot26');
+  if (glaski >= 100) odblokuj('kot100');
   if (glaski === 100) deszczSerc(24);
 }
 
 // Zabawne odpowiedzi, gdy wpisze coś konkretnego, co NIE jest odpowiedzią do tej paczki.
 const JAJKA = {
-  FOXI: { tekst: 'Hau! Foxi pozdrawia, ale to nie ta odpowiedź.' },
-  FOXY: { tekst: 'Hau! Foxi pozdrawia, ale to nie ta odpowiedź.' },
-  WIKTORIA: { tekst: 'To Ty! Ale odpowiedź jest inna :)', serca: true },
-  WIKI: { tekst: 'To Ty! Ale odpowiedź jest inna :)', serca: true },
-  ALAN: { tekst: 'To ja. Ale nie tędy droga :)' },
-  KOCHAMCIE: { tekst: 'Ja Ciebie też. A teraz odpowiedź :)', serca: true },
-  NIEWIEM: { tekst: 'Od tego są podpowiedzi :)' },
-  POMOCY: { tekst: 'Spokojnie. Masz podpowiedzi, a w ostateczności pominięcie.' },
+  FOXI: { tekst: 'Hau! Foxi pozdrawia, ale to nie ta odpowiedź.', os: 'foxi' },
+  FOXY: { tekst: 'Hau! Foxi pozdrawia, ale to nie ta odpowiedź.', os: 'foxi' },
+  WIKTORIA: { tekst: 'To Ty! Ale odpowiedź jest inna :)', serca: true, os: 'wiktoria' },
+  WIKI: { tekst: 'To Ty! Ale odpowiedź jest inna :)', serca: true, os: 'wiktoria' },
+  ALAN: { tekst: 'To ja. Ale nie tędy droga :)', os: 'alan' },
+  KOCHAMCIE: { tekst: 'Ja Ciebie też. A teraz odpowiedź :)', serca: true, os: 'kocham' },
+  NIEWIEM: { tekst: 'Od tego są podpowiedzi :)', os: 'pomocy' },
+  POMOCY: { tekst: 'Spokojnie. Masz podpowiedzi, a w ostateczności pominięcie.', os: 'pomocy' },
   HAH: { tekst: 'hah' },
-  MIAU: { tekst: 'Miau! Kot u góry odpowiada.' },
+  MIAU: { tekst: 'Miau! Kot u góry odpowiada.', os: 'miau' },
   KOT: { tekst: 'Kot jest u góry. Pogłaszcz go, może coś podpowie (nie podpowie).' },
-  NEFERA: { tekst: 'Nefera pozdrawia. Ale to nie ta odpowiedź.' },
+  NEFERA: { tekst: 'Nefera pozdrawia. Ale to nie ta odpowiedź.', os: 'nefera' },
   ASDF: { tekst: 'Klawiatura nie jest szyfrem :)' },
-  67: { tekst: '67 67', liczby: true },
-  PASLEK: { tekst: 'Pasłęk, tak, to miasto, obok którego mieszkasz.' },
-  CHIVAS: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
-  TACOHEMINGWAY: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
-  TACOHEMIGWAY: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
-  TACO: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)' },
-  CHCEMYTEGOWIECEJ: { tekst: 'To nie ten utwór, ale lubisz go bardzo.' },
-  TONASZAPIOSENKA: { tekst: 'Niestety też nie, ale to mój ulubiony, haha.' },
-  US: { tekst: 'Pamiętam, jak się uśmiechnąłem ze szczęścia.', serca: true }
+  67: { tekst: '67 67', liczby: true, os: '67' },
+  PASLEK: { tekst: 'Pasłęk, tak, to miasto, obok którego mieszkasz.', os: 'paslek' },
+  CHIVAS: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)', os: 'muzyka' },
+  TACOHEMINGWAY: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)', os: 'muzyka' },
+  TACOHEMIGWAY: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)', os: 'muzyka' },
+  TACO: { tekst: 'Niestety nie to jest odpowiedzią, ale dobry artysta muzyczny :)', os: 'muzyka' },
+  CHCEMYTEGOWIECEJ: { tekst: 'To nie ten utwór, ale lubisz go bardzo.', os: 'piosenki' },
+  TONASZAPIOSENKA: { tekst: 'Niestety też nie, ale to mój ulubiony, haha.', os: 'piosenki' },
+  US: { tekst: 'Pamiętam, jak się uśmiechnąłem ze szczęścia.', serca: true, os: 'us' }
 };
 const RICK_URL = 'https://www.youtube.com/watch?v=QDia3e12czc';
 const RICKROLL = ['RICKROLL', 'RICKROLLED', 'RICKROL', 'RIKROL', 'RIKROLL', 'RICK', 'RICKASTLEY', 'NEVERGONNAGIVEYOUUP', 'RICKROLLING'];
@@ -487,6 +525,7 @@ function sprawdzUrodziny() {
   if (aktywnaGodzina && aktywnaGodzina !== g) { aktywnaGodzina = null; pasekUrodzin?.remove(); pasekUrodzin = null; }
   if (tekst && !aktywnaGodzina) {
     aktywnaGodzina = g;
+    odblokuj('tort' + g.replace(':', ''));
     pasekUrodzin = document.createElement('div');
     pasekUrodzin.className = 'pasek-urodzin'; pasekUrodzin.setAttribute('role', 'status');
     pasekUrodzin.textContent = tekst;
@@ -502,12 +541,12 @@ function sekretTytulu() {
   const t = Date.now();
   klikTytul = t - klikCzas < 1500 ? klikTytul + 1 : 1;
   klikCzas = t;
-  if (klikTytul === 5) { klikTytul = 0; toast('Znalazłaś sekret. Ty naprawdę sprawdzasz wszystko, co? :)'); deszczSerc(10); }
+  if (klikTytul === 5) { klikTytul = 0; odblokuj('sekret'); toast('Znalazłaś sekret. Ty naprawdę sprawdzasz wszystko, co? :)'); deszczSerc(10); }
 }
 let nocnaUwaga = false;
 function sprawdzNoc() {
   const h = new Date().getHours();
-  if (!nocnaUwaga && h >= 0 && h < 5) { nocnaUwaga = true; setTimeout(() => toast('Nie śpisz jeszcze? Idź spać, zagadki poczekają :)'), 1200); }
+  if (!nocnaUwaga && h >= 0 && h < 5) { nocnaUwaga = true; odblokuj('noc'); setTimeout(() => toast('Nie śpisz jeszcze? Idź spać, zagadki poczekają :)'), 1200); }
 }
 
 /* ---------- tryb demo (bez Firebase) ---------- */
@@ -671,6 +710,98 @@ async function firebaseApi() {
   };
 }
 
+/* ---------- Sekrety: gablota z osiągnięciami ---------- */
+const IKONY = {
+  lapa: '<path d="M12 21c-3.5 0-6-2.2-6-4.6 0-2 2-3.4 3.4-4.6 1-.9 1.6-1.6 2.6-1.6s1.6.7 2.6 1.6C16 13 18 14.4 18 16.4 18 18.8 15.5 21 12 21z"/><ellipse cx="5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="9" cy="5" rx="2" ry="2.7"/><ellipse cx="15" cy="5" rx="2" ry="2.7"/><ellipse cx="19" cy="9.5" rx="2" ry="2.6"/>',
+  tort: '<rect x="11" y="2" width="2" height="5" rx="1"/><rect x="4" y="9" width="16" height="5" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/>',
+  serce: '<path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.2 0 3.6 1.2 4.3 2.4.7-1.2 2.1-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/>',
+  nuta: '<path d="M9 18.5V5l11-2v13" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="6.5" cy="18.5" r="3"/><circle cx="17.5" cy="16" r="3"/>',
+  ksiezyc: '<path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5z"/>',
+  klucz: '<circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M12 12h10M18 12v4M21 12v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+  gwiazda: '<path d="M12 2l3 6.6 7.2.8-5.4 4.8 1.6 7.1L12 17.6 5.6 21.3l1.6-7.1L1.8 9.4 9 8.6z"/>',
+  kosc: '<path d="M7 9.5 14.5 17a2.6 2.6 0 1 0 3.6 3.6 2.6 2.6 0 1 0 3.6-3.6 2.6 2.6 0 1 0-3.6-3.6L10.5 6A2.6 2.6 0 1 0 6.9 2.4 2.6 2.6 0 1 0 3.3 6a2.6 2.6 0 1 0 3.7 3.5z"/>',
+  film: '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M10 9l5 3-5 3z" fill="#1B1A2E"/>',
+  pajak: '<ellipse cx="12" cy="15" rx="4.2" ry="5"/><circle cx="12" cy="7.5" r="3"/><path d="M8 13L2 9M8 15H1M8 17l-6 4M16 13l6-4M16 15h7M16 17l6 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  jajko: '<path d="M12 2c4 0 7 6.5 7 11a7 7 0 0 1-14 0c0-4.5 3-11 7-11z"/>',
+  pinezka: '<path d="M12 22s-7-7.2-7-12.5a7 7 0 0 1 14 0C19 14.8 12 22 12 22z"/><circle cx="12" cy="9.5" r="2.6" fill="#1B1A2E"/>',
+  oko: '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3.4" fill="#1B1A2E"/>',
+  pytajnik: '<path d="M8.5 8.5a3.5 3.5 0 1 1 5 3.2c-1 .5-1.5 1.2-1.5 2.3v.8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="19" r="1.6"/>',
+  kot: '<path d="M4 4l4 4h8l4-4v9a8 8 0 0 1-16 0z"/>'
+};
+const ikona = (n) => `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${IKONY[n] || IKONY.gwiazda}</svg>`;
+const OSIAGNIECIA = [
+  { id: 'sekrety', nazwa: 'Łowczyni sekretów', opis: 'Znalazłaś tę gablotę.', ikona: 'jajko' },
+  { id: 'strych', nazwa: 'Strych', opis: 'Weszłaś na swój słynny strych.', ikona: 'pajak' },
+  { id: 'kot1', nazwa: 'Pierwszy głask', opis: 'Pogłaskałaś kota.', ikona: 'lapa' },
+  { id: 'kot15', nazwa: 'Moje urodziny', opis: '15 głasków, jak 15 października.', ikona: 'lapa' },
+  { id: 'kot26', nazwa: 'Twoje urodziny', opis: '26 głasków, jak 26 marca.', ikona: 'lapa' },
+  { id: 'kot100', nazwa: 'Mistrzyni głaskania', opis: '100 głasków. Kot jest Twój.', ikona: 'kot' },
+  { id: 'sekret', nazwa: 'Sprawdzam wszystko', opis: '5 stuknięć w „Hejj :)”.', ikona: 'oko' },
+  { id: 'klodka', nazwa: 'Gdzie klucz?', opis: 'Próbowałaś otworzyć kłódkę.', ikona: 'klucz' },
+  { id: 'noc', nazwa: 'Nocny marek', opis: 'Byłaś tu w środku nocy.', ikona: 'ksiezyc' },
+  { id: 'tort1910', nazwa: '19:10', opis: 'Byłaś tu o godzinie moich narodzin.', ikona: 'tort' },
+  { id: 'tort1015', nazwa: '10:15', opis: 'Godzina jak data moich urodzin.', ikona: 'tort' },
+  { id: 'tort0326', nazwa: '03:26', opis: 'Godzina jak data Twoich urodzin.', ikona: 'tort' },
+  { id: 'wiktoria', nazwa: 'To ja!', opis: 'Wpisałaś swoje imię.', ikona: 'serce' },
+  { id: 'alan', nazwa: 'To on', opis: 'Wpisałaś moje imię.', ikona: 'serce' },
+  { id: 'kocham', nazwa: 'Ja Ciebie też', opis: 'Wpisałaś „kocham cię” nie tam, gdzie trzeba.', ikona: 'serce' },
+  { id: 'us', nazwa: 'Us', opis: 'Dwa liście, które trzymają się za ręce.', ikona: 'serce' },
+  { id: 'foxi', nazwa: 'Hau!', opis: 'Foxi pozdrawia.', ikona: 'kosc' },
+  { id: 'nefera', nazwa: 'Nefera', opis: 'Kotka pozdrawia.', ikona: 'kot' },
+  { id: 'miau', nazwa: 'Miau', opis: 'Kot odpowiedział.', ikona: 'kot' },
+  { id: 'muzyka', nazwa: 'Dobry gust', opis: 'Chivas albo Taco Hemingway.', ikona: 'nuta' },
+  { id: 'piosenki', nazwa: 'Nie ten utwór', opis: 'Wpisałaś piosenkę, ale nie tę.', ikona: 'nuta' },
+  { id: 'rickroll', nazwa: 'Never gonna give you up', opis: 'Dałaś się zrickrollować.', ikona: 'film' },
+  { id: '67', nazwa: '67', opis: '6… 7…', ikona: 'gwiazda' },
+  { id: 'paslek', nazwa: 'Sąsiedztwo', opis: 'Pasłęk, miasto obok Ciebie.', ikona: 'pinezka' },
+  { id: 'pomocy', nazwa: 'Pomocy!', opis: 'Poprosiłaś o pomoc zamiast odpowiedzi.', ikona: 'pytajnik' },
+  { id: 'final', nazwa: 'Kocham Cię', opis: 'Rozwiązałaś finał.', ikona: 'serce' }
+];
+const SLOWA_SEKRETOW = ['EASTEREGG', 'EASTEREGGI', 'EASTEREGGS', 'EASTEREGGSY', 'JAJKA', 'JAJKO', 'SEKRET', 'SEKRETY', 'OSIAGNIECIA', 'ACHIEVEMENT', 'ACHIEVEMENTY', 'ACHIEVEMENTS', 'ACZIWMENTY'];
+let zdobyte = {};
+try { zdobyte = JSON.parse(localStorage.getItem('zostaw-osiagniecia')) || {}; } catch (e) { zdobyte = {}; }
+function odblokuj(id) {
+  if (zdobyte[id]) return;
+  const o = OSIAGNIECIA.find((x) => x.id === id);
+  if (!o) return;
+  zdobyte[id] = Date.now();
+  try { localStorage.setItem('zostaw-osiagniecia', JSON.stringify(zdobyte)); } catch (e) { /* trudno */ }
+  const el = document.createElement('div');
+  el.className = 'osiagniecie-popup'; el.setAttribute('role', 'status');
+  el.innerHTML = `<span class="ikona">${ikona(o.ikona)}</span><span><small>Odblokowano sekret</small><b>${esc(o.nazwa)}</b></span>`;
+  document.body.append(el);
+  setTimeout(() => el.remove(), 3400);
+}
+function widokSekretow() {
+  document.body.classList.add('w-sekretach');
+  const ile = OSIAGNIECIA.filter((o) => zdobyte[o.id]).length;
+  const kafle = OSIAGNIECIA.map((o, i) => (zdobyte[o.id]
+    ? `<li class="kafel zdobyty" style="--d:${120 + i * 40}ms"><span class="ikona">${ikona(o.ikona)}</span><b>${esc(o.nazwa)}</b><small>${esc(o.opis)}</small></li>`
+    : `<li class="kafel" style="--d:${120 + i * 40}ms"><span class="ikona zamek">${IKONA_KLODKI}</span><b>???</b><small>Jeszcze nie znalezione</small></li>`)).join('');
+  $app.innerHTML = `
+    <main class="sekrety">
+      <p class="mala">psst…</p>
+      <h1>Sekrety</h1>
+      <p class="sekrety-wstep">Każda niespodzianka, którą tu ukryłem, ma swoje miejsce w tej gablocie. Znalezione: <b>${ile} z ${OSIAGNIECIA.length}</b>.</p>
+      <div class="pasek-postepu" aria-hidden="true"><span style="width:${Math.round(ile / OSIAGNIECIA.length * 100)}%"></span></div>
+      <ul class="kafle">${kafle}</ul>
+      <button class="przycisk sekrety-wyjscie" type="button" data-a="z-sekretow">Wróć</button>
+    </main>`;
+  window.scrollTo(0, 0);
+}
+const IKONA_KLODKI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+function wejdzDoSekretow() {
+  const zKoloru = document.body.classList.contains('na-strychu') ? KOLOR_STRYCH : KOLOR_JASNY;
+  return przejscieKolorem(zKoloru, KOLOR_SEKRETY, async () => { document.body.classList.remove('na-strychu'); odblokuj('sekrety'); widokSekretow(); });
+}
+function wyjdzZSekretow() {
+  return przejscieKolorem(KOLOR_SEKRETY, KOLOR_JASNY, async () => {
+    document.body.classList.remove('w-sekretach');
+    st.bylRender = false;
+    widokGry();
+  });
+}
+
 /* ---------- pająk: wejście na strych ---------- */
 function pajakHTML() {
   return `<div class="siec" aria-hidden="true"><svg viewBox="0 0 90 90"><g fill="none" stroke="currentColor" stroke-width="1"><path d="M0 0L90 90M0 0L90 34M0 0L34 90M0 0L90 0M0 0L0 90"/><path d="M0 16Q12 12 16 0M0 32Q24 24 32 0M0 50Q38 38 50 0M0 68Q52 52 68 0M0 86Q66 66 86 0"/></g></svg></div>
@@ -791,7 +922,7 @@ async function odbierzPaczke(nr, btn) {
   st.swieza = nr;
   st.nowaLiteraNr = st.nagrody[nr] && st.nagrody[nr].litera ? nr : null;
   widokGry();
-  if (nr === LICZBA) deszczSerc(40);
+  if (nr === LICZBA) { deszczSerc(40); odblokuj('final'); }
 }
 
 /* ---------- stan i widok ---------- */
@@ -878,23 +1009,25 @@ function wejdzNaStrych() {
 
 const malyRuch = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let wTrakcieSchodow = false;
-async function schody(kierunek, potem) {
+const KOLOR_JASNY = '#FFFDF8', KOLOR_STRYCH = '#241C19', KOLOR_SEKRETY = '#1B1A2E';
+function schody(kierunek, potem) {
+  return przejscieKolorem(kierunek === 'gora' ? KOLOR_JASNY : KOLOR_STRYCH, kierunek === 'gora' ? KOLOR_STRYCH : KOLOR_JASNY, potem);
+}
+async function przejscieKolorem(zKoloru, doKoloru, potem) {
   if (wTrakcieSchodow) return;
   // schowaj klawiaturę i odczekaj, aż telefon skończy zmieniać wysokość ekranu
   if (document.activeElement && document.activeElement.blur) { const bylo = document.activeElement.tagName === 'INPUT'; document.activeElement.blur(); if (bylo) await czekaj(320); }
   if (malyRuch()) { await potem(); return; }
   wTrakcieSchodow = true;
-  const JASNY = '#FFFDF8', CIEMNY = '#241C19';
-  const gora = kierunek === 'gora';
   const o = document.createElement('div');
   o.className = 'przejscie';
   o.setAttribute('aria-hidden', 'true');
-  o.style.backgroundColor = gora ? JASNY : CIEMNY;
+  o.style.backgroundColor = zKoloru;
   document.body.append(o);
   void o.offsetWidth;
   o.classList.add('widac');            // 1. strona płynnie znika w swoim kolorze
   await czekaj(380);
-  o.style.backgroundColor = gora ? CIEMNY : JASNY;  // 2. kolor płynnie przechodzi w drugi
+  o.style.backgroundColor = doKoloru;  // 2. kolor płynnie przechodzi w drugi
   await czekaj(650);
   try { await potem(); } catch (e) { console.warn(e); }   // 3. podmiana pod zasłoną
   window.scrollTo(0, 0);
@@ -1076,7 +1209,8 @@ function widokGry() {
       ${nastepna ? `<p class="nastepna" id="nastepna">Następne zagadki: <b>${fmtDzien(nastepna.t)} o ${fmtGodz(nastepna.t)}</b> (${zaIle(nastepna.t)})</p>` : ''}
     </header>
     <div class="dni">${dni}</div>
-    <footer class="stopka"><span>Postęp zapisuje się sam.</span><button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></footer>`;
+    <footer class="stopka"><span>Postęp zapisuje się sam.</span>
+      <span class="stopka-prawa">${zdobyte.sekrety ? `<button class="jajko-btn" type="button" data-a="sekrety" aria-label="Sekrety">${ikona('jajko')}</button>` : ''}<button class="tekstowy" type="button" data-a="wyloguj">Wyloguj</button></span></footer>`;
   if (pierwsza) { const el = document.getElementById(pierwsza); if (el) el.focus(); }
   poRenderze();
 }
@@ -1276,13 +1410,20 @@ $app.addEventListener('submit', async (ev) => {
   st.wpisane[nr] = odp;
   if (!S.normalizuj(odp)) { st.komunikat[nr] = { zle: true, tekst: 'Najpierw coś wpisz.' }; widokGry(); return; }
   // Rickroll: otwieramy od razu (jeszcze w kliknięciu), żeby telefon nie zablokował nowej karty.
+  if (SLOWA_SEKRETOW.includes(S.normalizuj(odp))) {
+    st.wpisane[nr] = '';
+    wejdzDoSekretow();
+    return;
+  }
   if (S.normalizuj(odp) === 'STRYCH') {
     st.strych = true; st.wpisane[nr] = '';
+    odblokuj('strych');
     try { localStorage.setItem('zostaw-strych', '1'); } catch (e) { /* trudno, wpisze jeszcze raz */ }
     wejdzNaStrych();
     return;
   }
   if (RICKROLL.includes(S.normalizuj(odp))) {
+    odblokuj('rickroll');
     const okno = window.open(RICK_URL, '_blank', 'noopener');
     st.komunikat[nr] = { jajko: true, tekst: okno ? 'Never gonna give you up :)' : 'Never gonna give you up :) (telefon zablokował nową kartę)' };
     widokGry();
@@ -1299,6 +1440,7 @@ $app.addEventListener('submit', async (ev) => {
     } else {
       st.zajete = null;
       const jajko = JAJKA[S.normalizuj(odp)];
+      if (jajko && jajko.os) odblokuj(jajko.os);
       st.komunikat[nr] = jajko ? { jajko: true, tekst: jajko.tekst } : { zle: true, tekst: 'Jeszcze nie. Spróbuj inaczej.' };
       widokGry();
       if (jajko && jajko.serca) deszczSerc(14);
@@ -1323,14 +1465,14 @@ $app.addEventListener('input', (ev) => {
 $app.addEventListener('click', async (ev) => {
   const kot = ev.target.closest('[data-kot]');
   if (kot) { glaszcz(kot); return; }
-  if (ev.target.closest('[data-klodka]')) { toast('Bardzo chciałbym ci dać klucz, ale musisz poczekać :('); return; }
+  if (ev.target.closest('[data-klodka]')) { odblokuj('klodka'); toast('Bardzo chciałbym ci dać klucz, ale musisz poczekać :('); return; }
   if (ev.target.closest('[data-sekret]')) { sekretTytulu(); return; }
   const b = ev.target.closest('button[data-a]');
   if (!b) return;
   const a = b.dataset.a, nr = Number(b.dataset.nr);
   if (a === 'wyloguj') {
     stopZegar(); zatrzymajKamere(); await api.wyloguj();
-    st.strych = false; strychDane = null; strychObietnica = null; document.body.classList.remove('na-strychu');
+    st.strych = false; strychDane = null; strychObietnica = null; document.body.classList.remove('na-strychu', 'w-sekretach');
     try { localStorage.removeItem('zostaw-strych'); } catch (e) { /* nic */ }
     widokLogowania(); return;
   }
@@ -1342,6 +1484,8 @@ $app.addEventListener('click', async (ev) => {
   if (a === 'podpis-start') { await podpiszStart(b); return; }
   if (a === 'podpis-paczka') { await odbierzPaczke(Number(b.dataset.nr), b); return; }
   if (a === 'ze-strychu') { zejdzZeStrychu(); return; }
+  if (a === 'z-sekretow') { wyjdzZSekretow(); return; }
+  if (a === 'sekrety') { wejdzDoSekretow(); return; }
   if (a === 'demo-odliczanie') { widokCzekania(Date.now() + 2 * 86400000 + 3 * 3600000); return; }
   if (a === 'demo-wszystko') { api.otworzWszystko(); await startGry(false); return; }
   if (a === 'demo-czysc') { st.strych = false; try { localStorage.removeItem('zostaw-strych'); } catch (e) { /* nic */ } api.wyczysc(); st.nagrody = {}; st.podpowiedzi = {}; st.wpisane = {}; st.komunikat = {}; await startGry(false); return; }
@@ -1374,7 +1518,7 @@ setInterval(async () => {
   if (zamkniete.some((z) => Date.now() >= st.otwarcie(S.dzienPaczki(z.nr)))) {
     try {
       st.zagadki = await api.zagadki();
-      if (!document.body.classList.contains('na-strychu')) widokGry();
+      if (!document.body.classList.contains('na-strychu') && !document.body.classList.contains('w-sekretach')) widokGry();
     } catch (e) { /* spróbuje znowu */ }
   } else {
     const el = document.getElementById('nastepna');
